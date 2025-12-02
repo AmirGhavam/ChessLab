@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess PGN Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .square {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            position: relative;
+        }
+
+        .square.light {
+            background: #ebecd0;
+        }
+
+        .square.dark {
+            background: #739552;
+        }
+
+        .square.highlight {
+            box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.6);
+        }
+
+        .square.last-move.light {
+            background: #f6f669;
+        }
+
+        .square.last-move.dark {
+            background: #baca2b;
+        }
+
+        .piece {
+            width: 85%;
+            height: 85%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.15s ease;
+            filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.3));
+        }
+
+        .piece-icon {
+            width: 32px;
+            height: 32px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+            vertical-align: middle;
+            filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.3));
+        }
+
+        .piece-icon-sm {
+            width: 20px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* White Pieces - White fill with black outline */
+        .piece-wK {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath stroke-linejoin='miter' d='M22.5 11.63V6M20 8h5'/%3E%3Cpath fill='%23fff' stroke-linecap='butt' stroke-linejoin='miter' d='M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5'/%3E%3Cpath fill='%23fff' d='M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7'/%3E%3Cpath d='M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-wQ {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath d='M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15L14 11v14L7 14l2 12z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' d='M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-wR {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath stroke-linecap='butt' d='M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5'/%3E%3Cpath d='M34 14l-3 3H14l-3-3'/%3E%3Cpath stroke-linecap='butt' stroke-linejoin='miter' d='M31 17v12.5H14V17'/%3E%3Cpath d='M31 29.5l1.5 2.5h-20l1.5-2.5'/%3E%3Cpath fill='none' stroke-linejoin='miter' d='M11 14h23'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-wB {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cg fill='%23fff' stroke-linecap='butt'%3E%3Cpath d='M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.46 3-2 3-2z'/%3E%3Cpath d='M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z'/%3E%3Cpath d='M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z'/%3E%3C/g%3E%3Cpath stroke-linejoin='miter' d='M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-wN {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath fill='%23fff' d='M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21'/%3E%3Cpath fill='%23fff' d='M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3'/%3E%3Cpath fill='%23000' d='M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0zm5.433-9.75a.5 1.5 30 1 1-.866-.5.5 1.5 30 1 1 .866.5z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-wP {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cpath d='M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z' fill='%23fff' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        /* Black Pieces - Black fill with white outline (opposite of white pieces) */
+        .piece-bK {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath stroke-linejoin='miter' d='M22.5 11.63V6M20 8h5'/%3E%3Cpath fill='%23000' stroke-linecap='butt' stroke-linejoin='miter' d='M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5'/%3E%3Cpath fill='%23000' d='M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7'/%3E%3Cpath d='M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-bQ {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23000' fill-rule='evenodd' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath d='M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15L14 11v14L7 14l2 12z'/%3E%3Cpath stroke-linecap='butt' d='M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z'/%3E%3Cpath fill='none' d='M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-bR {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23000' fill-rule='evenodd' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath stroke-linecap='butt' d='M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5'/%3E%3Cpath d='M34 14l-3 3H14l-3-3'/%3E%3Cpath stroke-linecap='butt' stroke-linejoin='miter' d='M31 17v12.5H14V17'/%3E%3Cpath d='M31 29.5l1.5 2.5h-20l1.5-2.5'/%3E%3Cpath fill='none' stroke-linejoin='miter' d='M11 14h23'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-bB {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cg fill='%23000' stroke-linecap='butt'%3E%3Cpath d='M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.46 3-2 3-2z'/%3E%3Cpath d='M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z'/%3E%3Cpath d='M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z'/%3E%3C/g%3E%3Cpath stroke-linejoin='miter' d='M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-bN {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'%3E%3Cpath fill='%23000' d='M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21'/%3E%3Cpath fill='%23000' d='M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3'/%3E%3Cpath fill='%23fff' d='M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0zm5.433-9.75a.5 1.5 30 1 1-.866-.5.5 1.5 30 1 1 .866.5z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .piece-bP {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cpath d='M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z' fill='%23000' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        .move-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .move-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .move-item.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .game-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateX(4px);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .game-card.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-left: 3px solid #6366f1;
+        }
+
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            transform: scale(1.02);
+        }
+
+        .nav-btn {
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #334155;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .pagination-btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #6366f1;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .player-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+        }
+
+        .player-badge.white {
+            background: linear-gradient(135deg, #f0f0f0 0%, #d0d0d0 100%);
+            border: 2px solid #999;
+        }
+
+        .player-badge.black {
+            background: linear-gradient(135deg, #404040 0%, #1a1a1a 100%);
+            border: 2px solid #666;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen text-white">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <p id="loadingText" class="text-slate-400 mt-4">Loading games...</p>
+        <p id="loadingStats" class="text-slate-500 text-sm mt-2"></p>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1
+                class="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2 flex items-center justify-center gap-3">
+                <svg class="w-10 h-10 text-indigo-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2L9 5h6l-3-3zm0 3c-.55 0-1 .45-1 1v2H9v2h6V8h-2V6c0-.55-.45-1-1-1zm-5 6c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v5h2v-5h4v5h2v-5h1c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2H7z" />
+                </svg>
+                Chess PGN Viewer
+            </h1>
+            <p class="text-slate-400">Load, view, and analyze your chess games</p>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Left Panel - Games List -->
+            <div class="lg:w-80 flex-shrink-0">
+                <div class="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        Games
+                        <span id="gamesCount" class="ml-auto text-sm font-normal text-slate-400"></span>
+                    </h2>
+
+                    <!-- Upload Zone -->
+                    <div id="dropZone" class="drop-zone rounded-xl p-6 text-center mb-4 bg-slate-900/50">
+                        <svg class="w-12 h-12 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p class="text-slate-400 text-sm mb-3">Drag & drop PGN file here</p>
+                        <label class="inline-block cursor-pointer">
+                            <span
+                                class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                                Browse Files
+                            </span>
+                            <input type="file" id="fileInput" accept=".pgn,.txt" class="hidden">
+                        </label>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="mb-4 relative">
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Search players, events..."
+                            class="w-full bg-slate-900/50 border border-slate-600 rounded-lg pl-10 pr-4 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Games List -->
+                    <div id="gamesList" class="space-y-2 max-h-72 overflow-y-auto">
+                        <p class="text-slate-500 text-sm text-center py-4">No games loaded</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="pagination"
+                        class="flex items-center justify-between mt-4 pt-4 border-t border-slate-700 hidden">
+                        <button id="prevPage" class="pagination-btn bg-slate-700 flex items-center gap-1" disabled>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Prev
+                        </button>
+                        <span id="pageInfo" class="text-sm text-slate-400">Page 1 / 1</span>
+                        <button id="nextPage" class="pagination-btn bg-slate-700 flex items-center gap-1">
+                            Next
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Jump to game -->
+                    <div id="jumpToGame" class="mt-3 hidden">
+                        <div class="flex gap-2">
+                            <input type="number" id="jumpInput" min="1" placeholder="Game #"
+                                class="flex-1 bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                            <button id="jumpBtn"
+                                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm">Go</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Chess Board -->
+            <div class="flex-1 flex flex-col items-center">
+                <!-- Game Info -->
+                <div id="gameInfo"
+                    class="w-full max-w-lg bg-slate-800/50 backdrop-blur rounded-xl p-4 mb-4 border border-slate-700">
+                    <div class="text-center text-slate-400">Load a PGN file to view game details</div>
+                </div>
+
+                <!-- Board -->
+                <div class="w-full max-w-lg">
+                    <div id="chessBoard" class="chess-board w-full">
+                        <!-- Board will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex items-center gap-2 mt-6">
+                    <button id="btnFirst"
+                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                        title="First Move">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <button id="btnPrev"
+                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                        title="Previous Move">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <span id="moveCounter"
+                        class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 min-w-24 text-center">
+                        0 / 0
+                    </span>
+                    <button id="btnNext"
+                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                        title="Next Move">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    <button id="btnLast"
+                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                        title="Last Move">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Playback Speed -->
+                <div class="flex items-center gap-4 mt-4">
+                    <button id="btnAutoPlay"
+                        class="nav-btn icon-btn bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-6 py-2 rounded-lg font-medium">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                        Auto Play
+                    </button>
+                    <select id="playSpeed" class="bg-slate-700 px-3 py-2 rounded-lg border border-slate-600">
+                        <option value="2000">Slow</option>
+                        <option value="1000" selected>Normal</option>
+                        <option value="500">Fast</option>
+                        <option value="250">Very Fast</option>
+                    </select>
+                </div>
+
+                <!-- Game Navigation -->
+                <div class="flex items-center gap-2 mt-4">
+                    <button id="btnPrevGame"
+                        class="nav-btn icon-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                        title="Previous Game">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        </svg>
+                        Prev Game
+                    </button>
+                    <span id="gameCounter"
+                        class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 text-sm min-w-28 text-center">
+                        Game 0 / 0
+                    </span>
+                    <button id="btnNextGame"
+                        class="nav-btn icon-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                        title="Next Game">
+                        Next Game
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel - Moves -->
+            <div class="lg:w-72 flex-shrink-0">
+                <div class="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Moves
+                    </h2>
+                    <div id="movesList" class="max-h-96 overflow-y-auto">
+                        <p class="text-slate-500 text-sm text-center py-4">No moves to display</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial board setup
+        const INITIAL_BOARD = [
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        ];
+
+        // Piece to CSS class mapping
+        const PIECE_CLASSES = {
+            'K': 'piece-wK', 'Q': 'piece-wQ', 'R': 'piece-wR', 'B': 'piece-wB', 'N': 'piece-wN', 'P': 'piece-wP',
+            'k': 'piece-bK', 'q': 'piece-bQ', 'r': 'piece-bR', 'b': 'piece-bB', 'n': 'piece-bN', 'p': 'piece-bP'
+        };
+
+        // State
+        let games = [];
+        let filteredGames = [];
+        let currentGameIndex = 0;
+        let currentMoveIndex = -1;
+        let boardHistory = [];
+        let autoPlayInterval = null;
+
+        // Pagination
+        const GAMES_PER_PAGE = 50;
+        let currentPage = 0;
+
+        // DOM Elements
+        const chessBoard = document.getElementById('chessBoard');
+        const gamesList = document.getElementById('gamesList');
+        const movesList = document.getElementById('movesList');
+        const gameInfo = document.getElementById('gameInfo');
+        const moveCounter = document.getElementById('moveCounter');
+        const gameCounter = document.getElementById('gameCounter');
+        const gamesCount = document.getElementById('gamesCount');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const progressFill = document.getElementById('progressFill');
+        const loadingText = document.getElementById('loadingText');
+        const loadingStats = document.getElementById('loadingStats');
+        const searchInput = document.getElementById('searchInput');
+        const pagination = document.getElementById('pagination');
+        const jumpToGame = document.getElementById('jumpToGame');
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+
+        // Show/hide loading
+        function showLoading(show, progress = 0, text = 'Loading games...', stats = '') {
+            if (show) {
+                loadingOverlay.classList.remove('hidden');
+                progressFill.style.width = `${progress}%`;
+                loadingText.textContent = text;
+                loadingStats.textContent = stats;
+            } else {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function updateProgress(progress, text, stats) {
+            progressFill.style.width = `${progress}%`;
+            if (text) loadingText.textContent = text;
+            if (stats) loadingStats.textContent = stats;
+        }
+
+        // Initialize board
+        function initBoard() {
+            chessBoard.innerHTML = '';
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    const isLight = (row + col) % 2 === 0;
+                    square.className = `square ${isLight ? 'light' : 'dark'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+                    chessBoard.appendChild(square);
+                }
+            }
+        }
+
+        // Render board state
+        function renderBoard(board, lastMoveSquares = null) {
+            const squares = chessBoard.querySelectorAll('.square');
+            squares.forEach((square, index) => {
+                const row = Math.floor(index / 8);
+                const col = index % 8;
+                const piece = board[row][col];
+                const isLight = (row + col) % 2 === 0;
+
+                // Reset classes
+                square.className = `square ${isLight ? 'light' : 'dark'}`;
+
+                if (lastMoveSquares) {
+                    const squareKey = `${row},${col}`;
+                    if (lastMoveSquares.includes(squareKey)) {
+                        square.classList.add('last-move');
+                    }
+                }
+
+                if (piece) {
+                    const pieceClass = PIECE_CLASSES[piece];
+                    square.innerHTML = `<div class="piece ${pieceClass}"></div>`;
+                } else {
+                    square.innerHTML = '';
+                }
+            });
+        }
+
+        // Async PGN Parser
+        async function parsePGNAsync(pgnText) {
+            return new Promise((resolve) => {
+                showLoading(true, 0, 'Parsing PGN file...', 'Splitting games...');
+
+                setTimeout(() => {
+                    const gameTexts = pgnText.split(/\n(?=\[Event\s)/);
+                    const totalGames = gameTexts.length;
+                    const parsedGames = [];
+                    let currentIndex = 0;
+                    const chunkSize = 100;
+
+                    function processChunk() {
+                        const end = Math.min(currentIndex + chunkSize, totalGames);
+
+                        for (let i = currentIndex; i < end; i++) {
+                            const gameText = gameTexts[i];
+                            if (!gameText.trim()) continue;
+
+                            try {
+                                const game = parseGameText(gameText);
+                                if (game && game.moves.length > 0) {
+                                    game.index = parsedGames.length;
+                                    parsedGames.push(game);
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse game', i, e);
+                            }
+                        }
+
+                        currentIndex = end;
+                        const progress = Math.round((currentIndex / totalGames) * 100);
+                        updateProgress(progress, 'Parsing games...', `${parsedGames.length} games parsed (${currentIndex}/${totalGames})`);
+
+                        if (currentIndex < totalGames) {
+                            setTimeout(processChunk, 0);
+                        } else {
+                            showLoading(false);
+                            resolve(parsedGames);
+                        }
+                    }
+
+                    processChunk();
+                }, 50);
+            });
+        }
+
+        // Parse single game
+        function parseGameText(gameText) {
+            const game = { headers: {}, moves: [], rawMoves: '' };
+
+            const headerRegex = /\[(\w+)\s+"([^"]*)"\]/g;
+            let match;
+            while ((match = headerRegex.exec(gameText)) !== null) {
+                game.headers[match[1]] = match[2];
+            }
+
+            let movesText = gameText.replace(/\[[^\]]+\]/g, '').trim();
+
+            let prevLength;
+            do {
+                prevLength = movesText.length;
+                movesText = movesText.replace(/\([^()]*\)/g, '');
+            } while (movesText.length !== prevLength);
+
+            movesText = movesText.replace(/\{[^}]*\}/g, '');
+            movesText = movesText.replace(/\$\d+/g, '');
+            movesText = movesText.replace(/\d+\.{1,3}\s*/g, ' ');
+            movesText = movesText.replace(/1-0|0-1|1\/2-1\/2|\*/g, '');
+            movesText = movesText.replace(/\s+/g, ' ').trim();
+
+            game.rawMoves = movesText;
+            game.moves = movesText.split(/\s+/).filter(m => m.length > 0 && m.match(/^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[+#]?$|^O-O(-O)?[+#]?$/i));
+
+            return game;
+        }
+
+        // Deep copy board
+        function copyBoard(board) {
+            return board.map(row => [...row]);
+        }
+
+        // Parse algebraic notation and apply move
+        function applyMove(board, move, isWhite) {
+            const newBoard = copyBoard(board);
+            let fromRow, fromCol, toRow, toCol;
+            let moveSquares = [];
+
+            // Castling
+            if (move === 'O-O' || move === 'O-O-O' || move === 'O-O+' || move === 'O-O#' || move === 'O-O-O+' || move === 'O-O-O#') {
+                const row = isWhite ? 7 : 0;
+                const isKingside = move.startsWith('O-O') && !move.startsWith('O-O-O');
+
+                if (isKingside) {
+                    newBoard[row][6] = newBoard[row][4];
+                    newBoard[row][5] = newBoard[row][7];
+                    newBoard[row][4] = null;
+                    newBoard[row][7] = null;
+                    moveSquares = [`${row},4`, `${row},6`];
+                } else {
+                    newBoard[row][2] = newBoard[row][4];
+                    newBoard[row][3] = newBoard[row][0];
+                    newBoard[row][4] = null;
+                    newBoard[row][0] = null;
+                    moveSquares = [`${row},4`, `${row},2`];
+                }
+                return { board: newBoard, moveSquares };
+            }
+
+            let cleanMove = move.replace(/[+#!?]/g, '');
+
+            let promotionPiece = null;
+            if (cleanMove.includes('=')) {
+                const parts = cleanMove.split('=');
+                cleanMove = parts[0];
+                promotionPiece = isWhite ? parts[1][0].toUpperCase() : parts[1][0].toLowerCase();
+            }
+
+            let pieceType = 'P';
+            if (['K', 'Q', 'R', 'B', 'N'].includes(cleanMove[0])) {
+                pieceType = cleanMove[0];
+                cleanMove = cleanMove.substring(1);
+            }
+
+            const pieceChar = isWhite ? pieceType : pieceType.toLowerCase();
+
+            cleanMove = cleanMove.replace('x', '');
+
+            const targetMatch = cleanMove.match(/([a-h])([1-8])$/);
+            if (!targetMatch) return { board: newBoard, moveSquares: [] };
+
+            toCol = targetMatch[1].charCodeAt(0) - 97;
+            toRow = 8 - parseInt(targetMatch[2]);
+
+            const disambig = cleanMove.replace(/[a-h][1-8]$/, '');
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (newBoard[r][c] === pieceChar) {
+                        if (disambig.length > 0) {
+                            const fileMatch = disambig.match(/[a-h]/);
+                            const rankMatch = disambig.match(/[1-8]/);
+                            if (fileMatch && c !== fileMatch[0].charCodeAt(0) - 97) continue;
+                            if (rankMatch && r !== 8 - parseInt(rankMatch[0])) continue;
+                        }
+
+                        if (canMove(newBoard, r, c, toRow, toCol, pieceType, isWhite)) {
+                            fromRow = r;
+                            fromCol = c;
+                            break;
+                        }
+                    }
+                }
+                if (fromRow !== undefined) break;
+            }
+
+            if (fromRow !== undefined) {
+                if (pieceType === 'P' && fromCol !== toCol && newBoard[toRow][toCol] === null) {
+                    newBoard[fromRow][toCol] = null;
+                }
+
+                newBoard[toRow][toCol] = promotionPiece || pieceChar;
+                newBoard[fromRow][fromCol] = null;
+                moveSquares = [`${fromRow},${fromCol}`, `${toRow},${toCol}`];
+            }
+
+            return { board: newBoard, moveSquares };
+        }
+
+        function canMove(board, fromRow, fromCol, toRow, toCol, pieceType, isWhite) {
+            const rowDiff = toRow - fromRow;
+            const colDiff = toCol - fromCol;
+
+            switch (pieceType) {
+                case 'P':
+                    const direction = isWhite ? -1 : 1;
+                    const startRow = isWhite ? 6 : 1;
+                    if (colDiff === 0) {
+                        if (rowDiff === direction) return true;
+                        if (fromRow === startRow && rowDiff === 2 * direction) return true;
+                    }
+                    if (Math.abs(colDiff) === 1 && rowDiff === direction) return true;
+                    return false;
+
+                case 'N':
+                    return (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) ||
+                        (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2);
+
+                case 'B':
+                    if (Math.abs(rowDiff) !== Math.abs(colDiff)) return false;
+                    return isPathClear(board, fromRow, fromCol, toRow, toCol);
+
+                case 'R':
+                    if (rowDiff !== 0 && colDiff !== 0) return false;
+                    return isPathClear(board, fromRow, fromCol, toRow, toCol);
+
+                case 'Q':
+                    if (rowDiff !== 0 && colDiff !== 0 && Math.abs(rowDiff) !== Math.abs(colDiff)) return false;
+                    return isPathClear(board, fromRow, fromCol, toRow, toCol);
+
+                case 'K':
+                    return Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1;
+
+                default:
+                    return false;
+            }
+        }
+
+        function isPathClear(board, fromRow, fromCol, toRow, toCol) {
+            const rowStep = toRow > fromRow ? 1 : (toRow < fromRow ? -1 : 0);
+            const colStep = toCol > fromCol ? 1 : (toCol < fromCol ? -1 : 0);
+
+            let r = fromRow + rowStep;
+            let c = fromCol + colStep;
+
+            while (r !== toRow || c !== toCol) {
+                if (board[r][c] !== null) return false;
+                r += rowStep;
+                c += colStep;
+            }
+            return true;
+        }
+
+        function generateBoardHistory(game) {
+            boardHistory = [{ board: copyBoard(INITIAL_BOARD), moveSquares: null }];
+            let currentBoard = copyBoard(INITIAL_BOARD);
+
+            for (let i = 0; i < game.moves.length; i++) {
+                const isWhite = i % 2 === 0;
+                const result = applyMove(currentBoard, game.moves[i], isWhite);
+                currentBoard = result.board;
+                boardHistory.push({ board: copyBoard(currentBoard), moveSquares: result.moveSquares });
+            }
+        }
+
+        function filterGames(query) {
+            if (!query.trim()) {
+                filteredGames = [...games];
+            } else {
+                const q = query.toLowerCase();
+                filteredGames = games.filter(game => {
+                    const white = (game.headers.White || '').toLowerCase();
+                    const black = (game.headers.Black || '').toLowerCase();
+                    const event = (game.headers.Event || '').toLowerCase();
+                    const site = (game.headers.Site || '').toLowerCase();
+                    const date = (game.headers.Date || '').toLowerCase();
+                    return white.includes(q) || black.includes(q) || event.includes(q) || site.includes(q) || date.includes(q);
+                });
+            }
+            currentPage = 0;
+            updateGamesList();
+            updatePagination();
+        }
+
+        function updateGamesList() {
+            if (filteredGames.length === 0) {
+                gamesList.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No games found</p>';
+                gamesCount.textContent = '';
+                return;
+            }
+
+            gamesCount.textContent = `(${filteredGames.length})`;
+
+            const start = currentPage * GAMES_PER_PAGE;
+            const end = Math.min(start + GAMES_PER_PAGE, filteredGames.length);
+            const pageGames = filteredGames.slice(start, end);
+
+            gamesList.innerHTML = pageGames.map((game) => {
+                const white = game.headers.White || 'Unknown';
+                const black = game.headers.Black || 'Unknown';
+                const result = game.headers.Result || '*';
+                const date = game.headers.Date || '';
+                const year = date.split('.')[0] || '';
+                const isActive = game.index === currentGameIndex;
+
+                return `
+                    <div class="game-card p-3 rounded-lg ${isActive ? 'active' : ''}" 
+                         onclick="selectGame(${game.index})">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-sm truncate flex items-center gap-1">
+                                    <span class="piece-icon-sm piece-wK"></span> ${white}
+                                </div>
+                                <div class="font-medium text-sm truncate flex items-center gap-1">
+                                    <span class="piece-icon-sm piece-bK"></span> ${black}
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-400 ml-2">#${game.index + 1}</div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">${result} ${year ? '• ' + year : ''}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
+
+            if (totalPages <= 1) {
+                pagination.classList.add('hidden');
+                jumpToGame.classList.add('hidden');
+                return;
+            }
+
+            pagination.classList.remove('hidden');
+            jumpToGame.classList.remove('hidden');
+
+            prevPage.disabled = currentPage === 0;
+            nextPage.disabled = currentPage >= totalPages - 1;
+            pageInfo.textContent = `Page ${currentPage + 1} / ${totalPages}`;
+        }
+
+        function updateMovesList() {
+            const game = games[currentGameIndex];
+            if (!game || game.moves.length === 0) {
+                movesList.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No moves to display</p>';
+                return;
+            }
+
+            let html = '<div class="grid grid-cols-2 gap-1 text-sm">';
+            for (let i = 0; i < game.moves.length; i += 2) {
+                const moveNum = Math.floor(i / 2) + 1;
+                const whiteMove = game.moves[i];
+                const blackMove = game.moves[i + 1] || '';
+
+                html += `
+                    <div class="move-item ${i === currentMoveIndex ? 'active' : ''}" onclick="goToMove(${i})">
+                        ${moveNum}. ${whiteMove}
+                    </div>
+                    ${blackMove ? `
+                        <div class="move-item ${i + 1 === currentMoveIndex ? 'active' : ''}" onclick="goToMove(${i + 1})">
+                            ${blackMove}
+                        </div>
+                    ` : '<div></div>'}
+                `;
+            }
+            html += '</div>';
+            movesList.innerHTML = html;
+        }
+
+        function updateGameInfo() {
+            const game = games[currentGameIndex];
+            if (!game) {
+                gameInfo.innerHTML = '<div class="text-center text-slate-400">Load a PGN file to view game details</div>';
+                return;
+            }
+
+            const h = game.headers;
+            gameInfo.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="player-badge white">
+                            <span class="piece-icon-sm piece-wK" style="width:24px;height:24px;"></span>
+                        </div>
+                        <div>
+                            <div class="font-semibold">${h.White || 'Unknown'}</div>
+                            <div class="text-xs text-slate-400">${h.WhiteElo || '?'}</div>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold px-4 py-1 bg-slate-700 rounded-lg">${h.Result || '*'}</div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <div class="font-semibold">${h.Black || 'Unknown'}</div>
+                            <div class="text-xs text-slate-400">${h.BlackElo || '?'}</div>
+                        </div>
+                        <div class="player-badge black">
+                            <span class="piece-icon-sm piece-bK" style="width:24px;height:24px;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center text-xs text-slate-400">
+                    ${h.Event || ''} ${h.Site ? '• ' + h.Site : ''} ${h.Date ? '• ' + h.Date : ''}
+                </div>
+            `;
+        }
+
+        function updateMoveCounter() {
+            const game = games[currentGameIndex];
+            const total = game ? game.moves.length : 0;
+            moveCounter.textContent = `${currentMoveIndex + 1} / ${total}`;
+        }
+
+        function updateGameCounter() {
+            gameCounter.textContent = `Game ${currentGameIndex + 1} / ${games.length}`;
+        }
+
+        function selectGame(index) {
+            stopAutoPlay();
+            currentGameIndex = index;
+            currentMoveIndex = -1;
+            generateBoardHistory(games[index]);
+            updateGamesList();
+            updateMovesList();
+            updateGameInfo();
+            renderBoard(boardHistory[0].board);
+            updateMoveCounter();
+            updateGameCounter();
+
+            const activeCard = gamesList.querySelector('.game-card.active');
+            if (activeCard) {
+                activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function goToMove(index) {
+            stopAutoPlay();
+            currentMoveIndex = index;
+            const historyEntry = boardHistory[index + 1];
+            renderBoard(historyEntry.board, historyEntry.moveSquares);
+            updateMovesList();
+            updateMoveCounter();
+        }
+
+        function goToFirst() {
+            stopAutoPlay();
+            currentMoveIndex = -1;
+            renderBoard(boardHistory[0].board);
+            updateMovesList();
+            updateMoveCounter();
+        }
+
+        function goToPrev() {
+            if (currentMoveIndex >= 0) {
+                currentMoveIndex--;
+                const historyEntry = boardHistory[currentMoveIndex + 1];
+                renderBoard(historyEntry.board, historyEntry.moveSquares);
+                updateMovesList();
+                updateMoveCounter();
+            }
+        }
+
+        function goToNext() {
+            const game = games[currentGameIndex];
+            if (game && currentMoveIndex < game.moves.length - 1) {
+                currentMoveIndex++;
+                const historyEntry = boardHistory[currentMoveIndex + 1];
+                renderBoard(historyEntry.board, historyEntry.moveSquares);
+                updateMovesList();
+                updateMoveCounter();
+            }
+        }
+
+        function goToLast() {
+            stopAutoPlay();
+            const game = games[currentGameIndex];
+            if (game) {
+                currentMoveIndex = game.moves.length - 1;
+                const historyEntry = boardHistory[currentMoveIndex + 1];
+                renderBoard(historyEntry.board, historyEntry.moveSquares);
+                updateMovesList();
+                updateMoveCounter();
+            }
+        }
+
+        function goToPrevGame() {
+            if (currentGameIndex > 0) {
+                selectGame(currentGameIndex - 1);
+            }
+        }
+
+        function goToNextGame() {
+            if (currentGameIndex < games.length - 1) {
+                selectGame(currentGameIndex + 1);
+            }
+        }
+
+        function toggleAutoPlay() {
+            const btn = document.getElementById('btnAutoPlay');
+            if (autoPlayInterval) {
+                stopAutoPlay();
+            } else {
+                const speed = parseInt(document.getElementById('playSpeed').value);
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                    Pause
+                `;
+                btn.classList.remove('from-green-500', 'to-emerald-500', 'hover:from-green-600', 'hover:to-emerald-600');
+                btn.classList.add('from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+                autoPlayInterval = setInterval(() => {
+                    const game = games[currentGameIndex];
+                    if (game && currentMoveIndex < game.moves.length - 1) {
+                        goToNext();
+                    } else {
+                        stopAutoPlay();
+                    }
+                }, speed);
+            }
+        }
+
+        function stopAutoPlay() {
+            const btn = document.getElementById('btnAutoPlay');
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Auto Play
+                `;
+                btn.classList.add('from-green-500', 'to-emerald-500', 'hover:from-green-600', 'hover:to-emerald-600');
+                btn.classList.remove('from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
+            }
+        }
+
+        async function handleFile(file) {
+            showLoading(true, 0, 'Reading file...', file.name);
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const content = e.target.result;
+                    games = await parsePGNAsync(content);
+
+                    if (games.length > 0) {
+                        filteredGames = [...games];
+                        currentGameIndex = 0;
+                        currentMoveIndex = -1;
+                        currentPage = 0;
+                        generateBoardHistory(games[0]);
+                        updateGamesList();
+                        updatePagination();
+                        updateMovesList();
+                        updateGameInfo();
+                        renderBoard(boardHistory[0].board);
+                        updateMoveCounter();
+                        updateGameCounter();
+                    } else {
+                        alert('No valid games found in the PGN file.');
+                    }
+                } catch (error) {
+                    console.error('Error parsing PGN:', error);
+                    alert('Error parsing PGN file. Please check the file format.');
+                    showLoading(false);
+                }
+            };
+            reader.onerror = () => {
+                alert('Error reading file.');
+                showLoading(false);
+            };
+            reader.readAsText(file);
+        }
+
+        // Event Listeners
+        document.getElementById('btnFirst').addEventListener('click', goToFirst);
+        document.getElementById('btnPrev').addEventListener('click', goToPrev);
+        document.getElementById('btnNext').addEventListener('click', goToNext);
+        document.getElementById('btnLast').addEventListener('click', goToLast);
+        document.getElementById('btnPrevGame').addEventListener('click', goToPrevGame);
+        document.getElementById('btnNextGame').addEventListener('click', goToNextGame);
+        document.getElementById('btnAutoPlay').addEventListener('click', toggleAutoPlay);
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterGames(e.target.value);
+            }, 300);
+        });
+
+        prevPage.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                updateGamesList();
+                updatePagination();
+            }
+        });
+
+        nextPage.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                updateGamesList();
+                updatePagination();
+            }
+        });
+
+        document.getElementById('jumpBtn').addEventListener('click', () => {
+            const jumpInput = document.getElementById('jumpInput');
+            const gameNum = parseInt(jumpInput.value);
+            if (gameNum >= 1 && gameNum <= games.length) {
+                selectGame(gameNum - 1);
+                jumpInput.value = '';
+            }
+        });
+
+        document.getElementById('jumpInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('jumpBtn').click();
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToPrev();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                goToNext();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                goToPrevGame();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                goToNextGame();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToFirst();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goToLast();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                toggleAutoPlay();
+            }
+        });
+
+        // Initialize
+        initBoard();
+        renderBoard(INITIAL_BOARD);
+
+        // Load sample PGN for demo
+        const samplePGN = `[Event "Troll Masters"]
+[Site "Gausdal NOR"]
+[Date "2001.01.05"]
+[Round "1"]
+[White "Edvardsen,R"]
+[Black "Carlsen,Magnus"]
+[Result "1/2-1/2"]
+[WhiteElo "2055"]
+[BlackElo ""]
+[ECO "D12"]
+
+1.d4 Nf6 2.Nf3 d5 3.e3 Bf5 4.c4 c6 5.Nc3 e6 6.Bd3 Bxd3 7.Qxd3 Nbd7 8.b3 Bd6
+9.O-O O-O 10.Bb2 Qe7 11.Rad1 Rad8 12.Rfe1 dxc4 13.bxc4 e5 14.dxe5 Nxe5 15.Nxe5 Bxe5
+16.Qe2 Rxd1 17.Rxd1 Rd8 18.Rxd8+ Qxd8 19.Qd1 Qxd1+ 20.Nxd1 Bxb2 21.Nxb2 b5
+22.f3 Kf8 23.Kf2 Ke7  1/2-1/2
+
+[Event "Troll Masters"]
+[Site "Gausdal NOR"]
+[Date "2001.01.06"]
+[Round "2"]
+[White "Carlsen,Magnus"]
+[Black "Brameld,A"]
+[Result "0-1"]
+[WhiteElo ""]
+[BlackElo "2095"]
+[ECO "B05"]
+
+1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 Bg4 5.Bc4 e6 6.O-O Nb6 7.Be2 Be7 8.h3 Bh5
+9.Bf4 Nc6 10.c3 O-O 11.Nbd2 d5 12.b4 a5 13.a3 Qd7 14.Qc2 Bg6 15.Bd3 Rfc8
+16.Rfb1 Bf8 17.h4 Ne7 18.g3 Qa4 19.Ne1 Qxc2 20.Bxc2 Bxc2 21.Nxc2 Na4 22.Rb3 b6
+23.Kf1 c5 24.bxc5 bxc5 25.dxc5 Rxc5 26.Nb1 Rac8 27.Be3 Rc4 28.Bd4 Nc6 29.Rb5 Nxd4
+30.Nxd4 Nxc3 31.Nxc3 Rxd4 32.Ne2 Ra4 33.Ke1 Rxa3 34.Rab1 Bb4+ 35.Kf1 Rd3  0-1`;
+
+        games = samplePGN.split(/\n(?=\[Event\s)/).map((text, i) => {
+            const game = parseGameText(text);
+            game.index = i;
+            return game;
+        }).filter(g => g.moves.length > 0);
+
+        if (games.length > 0) {
+            filteredGames = [...games];
+            generateBoardHistory(games[0]);
+            updateGamesList();
+            updatePagination();
+            updateMovesList();
+            updateGameInfo();
+            updateMoveCounter();
+            updateGameCounter();
+        }
+    </script>
+</body>
+
+</html>
