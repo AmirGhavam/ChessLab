@@ -646,14 +646,14 @@
 
             <!-- Center - Chess Board -->
             <div class="flex-1 flex flex-col items-center">
-                <!-- Game Info -->
+                <!-- Game Info (hidden by default) -->
                 <div id="gameInfo"
-                    class="w-full max-w-lg bg-slate-800/50 backdrop-blur rounded-xl p-4 mb-4 border border-slate-700">
+                    class="w-full max-w-2xl bg-slate-800/50 backdrop-blur rounded-xl p-4 mb-4 border border-slate-700 hidden">
                     <div class="text-center text-slate-400">Load a PGN file to view game details</div>
                 </div>
 
                 <!-- Board -->
-                <div class="w-full max-w-lg">
+                <div class="w-full max-w-2xl">
                     <div class="board-container">
                         <div class="board-coordinates">
                             <div id="chessBoard" class="chess-board w-full">
@@ -684,70 +684,79 @@
                 </div>
 
                 <!-- Navigation Controls -->
-                <div class="flex items-center gap-2 mt-6">
-                    <button id="btnFirst"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
-                        title="First Move">
-                        ⏮️
-                    </button>
-                    <button id="btnPrev"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
-                        title="Previous Move">
-                        ◀️
-                    </button>
-                    <span id="moveCounter"
-                        class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 min-w-24 text-center">
-                        0 / 0
-                    </span>
-                    <button id="btnNext"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
-                        title="Next Move">
-                        ▶️
-                    </button>
-                    <button id="btnLast"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
-                        title="Last Move">
-                        ⏭️
-                    </button>
-                </div>
+                <div class="w-full max-w-2xl mt-6 space-y-4">
+                    <!-- Move Navigation -->
+                    <div class="flex items-center justify-center gap-2">
+                        <button id="btnFirst"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            title="First Move">
+                            ⏮️
+                        </button>
+                        <button id="btnPrev"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            title="Previous Move">
+                            ◀️
+                        </button>
+                        <span id="moveCounter"
+                            class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 min-w-24 text-center">
+                            0 / 0
+                        </span>
+                        <button id="btnNext"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            title="Next Move">
+                            ▶️
+                        </button>
+                        <button id="btnLast"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            title="Last Move">
+                            ⏭️
+                        </button>
+                    </div>
 
-                <!-- Playback Speed -->
-                <div class="flex items-center gap-4 mt-4">
-                    <button id="btnAutoPlay"
-                        class="nav-btn bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-6 py-2 rounded-lg font-medium">
-                        ▶ Auto Play
-                    </button>
-                    <select id="playSpeed" class="bg-slate-700 px-3 py-2 rounded-lg border border-slate-600">
-                        <option value="2000">Slow</option>
-                        <option value="1000" selected>Normal</option>
-                        <option value="500">Fast</option>
-                        <option value="250">Very Fast</option>
-                    </select>
-                </div>
+                    <!-- Playback and Game Controls -->
+                    <div class="flex items-center justify-center gap-3 flex-wrap">
+                        <button id="btnAutoPlay"
+                            class="nav-btn bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-5 py-2 rounded-lg font-medium">
+                            ▶ Auto Play
+                        </button>
+                        <select id="playSpeed" class="bg-slate-700 px-3 py-2 rounded-lg border border-slate-600">
+                            <option value="2000">Slow</option>
+                            <option value="1000" selected>Normal</option>
+                            <option value="500">Fast</option>
+                            <option value="250">Very Fast</option>
+                        </select>
+                        <button id="btnResetBoard"
+                            class="nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-5 py-2 rounded-lg font-medium"
+                            title="Reset to Starting Position">
+                            🔄 Reset
+                        </button>
+                    </div>
 
-                <!-- Game Navigation -->
-                <div class="flex items-center gap-2 mt-4">
-                    <button id="btnPrevGame"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
-                        title="Previous Game">
-                        ⏪ Prev Game
-                    </button>
-                    <span id="gameCounter"
-                        class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 text-sm min-w-28 text-center">
-                        Game 0 / 0
-                    </span>
-                    <button id="btnNextGame"
-                        class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm" title="Next Game">
-                        Next Game ⏩
-                    </button>
-                </div>
+                    <!-- Game Navigation -->
+                    <div class="flex items-center justify-center gap-2">
+                        <button id="btnPrevGame"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                            title="Previous Game">
+                            ⏪ Prev Game
+                        </button>
+                        <span id="gameCounter"
+                            class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 text-sm min-w-28 text-center">
+                            Game 0 / 0
+                        </span>
+                        <button id="btnNextGame"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                            title="Next Game">
+                            Next Game ⏩
+                        </button>
+                    </div>
 
-                <!-- Reset Analysis Button -->
-                <div id="analysisControls" class="mt-4 hidden">
-                    <button id="btnResetPosition"
-                        class="nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-6 py-2 rounded-lg font-medium">
-                        ↩️ Reset to Game Position
-                    </button>
+                    <!-- Reset Analysis Button -->
+                    <div id="analysisControls" class="flex justify-center hidden">
+                        <button id="btnResetPosition"
+                            class="nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-6 py-2 rounded-lg font-medium">
+                            ↩️ Reset to Game Position
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1551,9 +1560,12 @@
         function updateGameInfo() {
             const game = games[currentGameIndex];
             if (!game) {
-                gameInfo.innerHTML = '<div class="text-center text-slate-400">Load a PGN file to view game details</div>';
+                gameInfo.classList.add('hidden'); // Hide when no game
                 return;
             }
+
+            // Show game info when a game is loaded
+            gameInfo.classList.remove('hidden');
 
             const h = game.headers;
             gameInfo.innerHTML = `
@@ -1811,6 +1823,12 @@
         document.getElementById('btnPrevGame').addEventListener('click', goToPrevGame);
         document.getElementById('btnNextGame').addEventListener('click', goToNextGame);
         document.getElementById('btnAutoPlay').addEventListener('click', toggleAutoPlay);
+        document.getElementById('btnResetBoard').addEventListener('click', () => {
+            if (analysisMode) {
+                resetToGamePosition();
+            }
+            goToFirst();
+        });
         document.getElementById('btnResetPosition').addEventListener('click', resetToGamePosition);
 
         fileInput.addEventListener('change', (e) => {
@@ -1915,45 +1933,45 @@
         initBoard();
         renderBoard(INITIAL_BOARD);
 
-        // Load sample PGN for demo
-        const samplePGN = `[Event "Troll Masters"]
-[Site "Gausdal NOR"]
-[Date "2001.01.05"]
-[Round "1"]
-[White "Edvardsen,R"]
-[Black "Carlsen,Magnus"]
-[Result "1/2-1/2"]
-[WhiteElo "2055"]
-[BlackElo ""]
-[ECO "D12"]
+        //         // Load sample PGN for demo
+        //         const samplePGN = `[Event "Troll Masters"]
+        // [Site "Gausdal NOR"]
+        // [Date "2001.01.05"]
+        // [Round "1"]
+        // [White "Edvardsen,R"]
+        // [Black "Carlsen,Magnus"]
+        // [Result "1/2-1/2"]
+        // [WhiteElo "2055"]
+        // [BlackElo ""]
+        // [ECO "D12"]
 
-1.d4 Nf6 2.Nf3 d5 3.e3 Bf5 4.c4 c6 5.Nc3 e6 6.Bd3 Bxd3 7.Qxd3 Nbd7 8.b3 Bd6
-9.O-O O-O 10.Bb2 Qe7 11.Rad1 Rad8 12.Rfe1 dxc4 13.bxc4 e5 14.dxe5 Nxe5 15.Nxe5 Bxe5
-16.Qe2 Rxd1 17.Rxd1 Rd8 18.Rxd8+ Qxd8 19.Qd1 Qxd1+ 20.Nxd1 Bxb2 21.Nxb2 b5
-22.f3 Kf8 23.Kf2 Ke7  1/2-1/2
+        // 1.d4 Nf6 2.Nf3 d5 3.e3 Bf5 4.c4 c6 5.Nc3 e6 6.Bd3 Bxd3 7.Qxd3 Nbd7 8.b3 Bd6
+        // 9.O-O O-O 10.Bb2 Qe7 11.Rad1 Rad8 12.Rfe1 dxc4 13.bxc4 e5 14.dxe5 Nxe5 15.Nxe5 Bxe5
+        // 16.Qe2 Rxd1 17.Rxd1 Rd8 18.Rxd8+ Qxd8 19.Qd1 Qxd1+ 20.Nxd1 Bxb2 21.Nxb2 b5
+        // 22.f3 Kf8 23.Kf2 Ke7  1/2-1/2
 
-[Event "Troll Masters"]
-[Site "Gausdal NOR"]
-[Date "2001.01.06"]
-[Round "2"]
-[White "Carlsen,Magnus"]
-[Black "Brameld,A"]
-[Result "0-1"]
-[WhiteElo ""]
-[BlackElo "2095"]
-[ECO "B05"]
+        // [Event "Troll Masters"]
+        // [Site "Gausdal NOR"]
+        // [Date "2001.01.06"]
+        // [Round "2"]
+        // [White "Carlsen,Magnus"]
+        // [Black "Brameld,A"]
+        // [Result "0-1"]
+        // [WhiteElo ""]
+        // [BlackElo "2095"]
+        // [ECO "B05"]
 
-1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 Bg4 5.Bc4 e6 6.O-O Nb6 7.Be2 Be7 8.h3 Bh5
-9.Bf4 Nc6 10.c3 O-O 11.Nbd2 d5 12.b4 a5 13.a3 Qd7 14.Qc2 Bg6 15.Bd3 Rfc8
-16.Rfb1 Bf8 17.h4 Ne7 18.g3 Qa4 19.Ne1 Qxc2 20.Bxc2 Bxc2 21.Nxc2 Na4 22.Rb3 b6
-23.Kf1 c5 24.bxc5 bxc5 25.dxc5 Rxc5 26.Nb1 Rac8 27.Be3 Rc4 28.Bd4 Nc6 29.Rb5 Nxd4
-30.Nxd4 Nxc3 31.Nxc3 Rxd4 32.Ne2 Ra4 33.Ke1 Rxa3 34.Rab1 Bb4+ 35.Kf1 Rd3  0-1`;
+        // 1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 Bg4 5.Bc4 e6 6.O-O Nb6 7.Be2 Be7 8.h3 Bh5
+        // 9.Bf4 Nc6 10.c3 O-O 11.Nbd2 d5 12.b4 a5 13.a3 Qd7 14.Qc2 Bg6 15.Bd3 Rfc8
+        // 16.Rfb1 Bf8 17.h4 Ne7 18.g3 Qa4 19.Ne1 Qxc2 20.Bxc2 Bxc2 21.Nxc2 Na4 22.Rb3 b6
+        // 23.Kf1 c5 24.bxc5 bxc5 25.dxc5 Rxc5 26.Nb1 Rac8 27.Be3 Rc4 28.Bd4 Nc6 29.Rb5 Nxd4
+        // 30.Nxd4 Nxc3 31.Nxc3 Rxd4 32.Ne2 Ra4 33.Ke1 Rxa3 34.Rab1 Bb4+ 35.Kf1 Rd3  0-1`;
 
-        games = samplePGN.split(/\n(?=\[Event\s)/).map((text, i) => {
-            const game = parseGameText(text);
-            game.index = i;
-            return game;
-        }).filter(g => g.moves.length > 0);
+        // games = samplePGN.split(/\n(?=\[Event\s)/).map((text, i) => {
+        //     const game = parseGameText(text);
+        //     game.index = i;
+        //     return game;
+        // }).filter(g => g.moves.length > 0);
 
         if (games.length > 0) {
             filteredGames = [...games];
@@ -1975,6 +1993,8 @@
         let isAnalyzing = false;
         let analysisLines = {};
         let lastAnalyzedFen = '';
+        let currentAnalysisId = 0; // Track analysis requests to cancel outdated ones
+        let analysisTimeout = null; // For debouncing rapid position changes
 
         // DOM elements for engine
         const engineToggle = document.getElementById('engineToggle');
@@ -2201,6 +2221,9 @@
         }
 
         function parseAnalysisInfo(info) {
+            // Ignore results if we're not actively analyzing (analysis was cancelled)
+            if (!isAnalyzing) return;
+
             const depthMatch = info.match(/depth (\d+)/);
             const pvMatch = info.match(/multipv (\d+)/);
             const scoreMatch = info.match(/score (cp|mate) (-?\d+)/);
@@ -2249,35 +2272,63 @@
             currentDepth.textContent = depth;
             thinkingIndicator.classList.remove('hidden');
 
-            const mainLine = analysisLines[1];
-            if (!mainLine) return;
+            // Find the line with the best evaluation (highest absolute value for the current side)
+            let bestLine = null;
+            const numLines = parseInt(multiPV.value);
 
-            evalScore.textContent = mainLine.evalText;
-            evalScoreBar.textContent = mainLine.evalText;
+            for (let i = 1; i <= numLines; i++) {
+                const line = analysisLines[i];
+                if (!line) continue;
 
-            if (mainLine.eval > 0.5) {
+                if (!bestLine) {
+                    bestLine = line;
+                } else {
+                    // Compare evaluations - higher is better for the side to move
+                    if (line.eval > bestLine.eval) {
+                        bestLine = line;
+                    }
+                }
+            }
+
+            if (!bestLine) return;
+
+            // Display the best evaluation
+            evalScore.textContent = bestLine.evalText;
+            evalScoreBar.textContent = bestLine.evalText;
+
+            if (bestLine.eval > 0.5) {
                 evalScore.className = 'text-lg font-bold text-green-400';
-            } else if (mainLine.eval < -0.5) {
+            } else if (bestLine.eval < -0.5) {
                 evalScore.className = 'text-lg font-bold text-red-400';
             } else {
                 evalScore.className = 'text-lg font-bold text-slate-300';
             }
 
-            const barPercent = 50 + (Math.tanh(mainLine.eval / 3) * 50);
+            const barPercent = 50 + (Math.tanh(bestLine.eval / 3) * 50);
             evalFill.style.height = `${barPercent}%`;
 
-            if (mainLine.moves.length > 0) {
-                bestMoveEl.textContent = formatMove(mainLine.moves[0]);
+            // Display the best move from the best line
+            if (bestLine.moves.length > 0) {
+                bestMoveEl.textContent = formatMove(bestLine.moves[0]);
             }
 
-            let linesHTML = '';
-            const numLines = parseInt(multiPV.value);
+            // Display all analysis lines sorted by evaluation (best first)
+            const sortedLines = [];
             for (let i = 1; i <= numLines; i++) {
-                const line = analysisLines[i];
-                if (!line) continue;
+                if (analysisLines[i]) {
+                    sortedLines.push(analysisLines[i]);
+                }
+            }
 
-                const movesStr = line.moves.map(m => formatMove(m)).join(' ');
-                const evalClass = line.eval > 0 ? 'text-green-400' : (line.eval < 0 ? 'text-red-400' : 'text-slate-300');
+            // Sort by evaluation (descending - best first)
+            sortedLines.sort((a, b) => b.eval - a.eval);
+
+            let linesHTML = '';
+            for (const line of sortedLines) {
+                // Convert UCI moves to SAN by simulating the position
+                const movesStr = formatMoveSequence(line.moves);
+                // Use purple/indigo color for all evaluations (matching the theme)
+                const evalClass = 'text-indigo-400';
 
                 linesHTML += `
                     <div class="analysis-line">
@@ -2289,14 +2340,181 @@
             analysisLinesEl.innerHTML = linesHTML || '<p class="text-slate-500 text-xs text-center py-2">Analyzing...</p>';
         }
 
-        function formatMove(uciMove) {
+        // Format a sequence of UCI moves by simulating the position
+        function formatMoveSequence(uciMoves) {
+            if (!uciMoves || uciMoves.length === 0) return '';
+
+            const currentBoard = getCurrentBoard();
+            let tempBoard = copyBoard(currentBoard);
+            const sanMoves = [];
+
+            for (let i = 0; i < uciMoves.length; i++) {
+                const uciMove = uciMoves[i];
+                const sanMove = formatMove(uciMove, tempBoard);
+                sanMoves.push(sanMove);
+
+                // Apply the move to the temp board for the next conversion
+                tempBoard = applyUCIMove(tempBoard, uciMove);
+                if (!tempBoard) break; // If move application fails, stop
+            }
+
+            return sanMoves.join(' ');
+        }
+
+        // Apply a UCI move to a board (returns new board)
+        function applyUCIMove(board, uciMove) {
+            if (!uciMove || uciMove.length < 4) return null;
+
+            const newBoard = copyBoard(board);
+            const fromSquare = uciMove.substring(0, 2);
+            const toSquare = uciMove.substring(2, 4);
+            const promotion = uciMove.length > 4 ? uciMove[4].toLowerCase() : null;
+
+            const fromCol = fromSquare.charCodeAt(0) - 97;
+            const fromRow = 8 - parseInt(fromSquare[1]);
+            const toCol = toSquare.charCodeAt(0) - 97;
+            const toRow = 8 - parseInt(toSquare[1]);
+
+            const piece = newBoard[fromRow][fromCol];
+            if (!piece) return null;
+
+            const pieceType = piece.toUpperCase();
+            const isWhite = piece === piece.toUpperCase();
+
+            // Handle castling
+            if (pieceType === 'K' && Math.abs(toCol - fromCol) === 2) {
+                const row = fromRow;
+                if (toCol > fromCol) { // Kingside
+                    newBoard[row][6] = newBoard[row][4];
+                    newBoard[row][5] = newBoard[row][7];
+                    newBoard[row][4] = null;
+                    newBoard[row][7] = null;
+                } else { // Queenside
+                    newBoard[row][2] = newBoard[row][4];
+                    newBoard[row][3] = newBoard[row][0];
+                    newBoard[row][4] = null;
+                    newBoard[row][0] = null;
+                }
+                return newBoard;
+            }
+
+            // Handle en passant
+            if (pieceType === 'P' && fromCol !== toCol && !newBoard[toRow][toCol]) {
+                newBoard[fromRow][toCol] = null;
+            }
+
+            // Move the piece
+            if (promotion) {
+                newBoard[toRow][toCol] = isWhite ? promotion.toUpperCase() : promotion.toLowerCase();
+            } else {
+                newBoard[toRow][toCol] = piece;
+            }
+            newBoard[fromRow][fromCol] = null;
+
+            return newBoard;
+        }
+
+        function formatMove(uciMove, board = null) {
             if (!uciMove || uciMove.length < 4) return uciMove;
 
-            const from = uciMove.substring(0, 2);
-            const to = uciMove.substring(2, 4);
-            const promotion = uciMove.length > 4 ? '=' + uciMove[4].toUpperCase() : '';
+            // Use current board if not provided
+            if (!board) {
+                board = getCurrentBoard();
+            }
 
-            return from + to + promotion;
+            const fromSquare = uciMove.substring(0, 2);
+            const toSquare = uciMove.substring(2, 4);
+            const promotion = uciMove.length > 4 ? uciMove[4].toUpperCase() : null;
+
+            // Parse squares
+            const fromCol = fromSquare.charCodeAt(0) - 97; // a=0, b=1, etc.
+            const fromRow = 8 - parseInt(fromSquare[1]); // 8=0, 7=1, etc.
+            const toCol = toSquare.charCodeAt(0) - 97;
+            const toRow = 8 - parseInt(toSquare[1]);
+
+            // Get the piece being moved
+            const piece = board[fromRow][fromCol];
+            if (!piece) return uciMove; // Fallback if no piece found
+
+            const pieceType = piece.toUpperCase();
+            const isWhite = piece === piece.toUpperCase();
+
+            // Check for castling
+            if (pieceType === 'K') {
+                const colDiff = toCol - fromCol;
+                if (Math.abs(colDiff) === 2) {
+                    return colDiff > 0 ? 'O-O' : 'O-O-O';
+                }
+            }
+
+            // Check if it's a capture
+            const isCapture = board[toRow][toCol] !== null ||
+                (pieceType === 'P' && fromCol !== toCol && board[toRow][toCol] === null); // En passant
+
+            // Build the move notation
+            let san = '';
+
+            // Add piece letter (except for pawns)
+            if (pieceType !== 'P') {
+                san += pieceType;
+
+                // Check if disambiguation is needed
+                const disambiguation = getDisambiguation(board, piece, fromRow, fromCol, toRow, toCol, pieceType, isWhite);
+                san += disambiguation;
+            } else if (isCapture) {
+                // For pawn captures, include the starting file
+                san += fromSquare[0];
+            }
+
+            // Add capture symbol
+            if (isCapture) {
+                san += 'x';
+            }
+
+            // Add destination square
+            san += toSquare;
+
+            // Add promotion
+            if (promotion) {
+                san += '=' + promotion;
+            }
+
+            return san;
+        }
+
+        // Helper function to determine if disambiguation is needed
+        function getDisambiguation(board, piece, fromRow, fromCol, toRow, toCol, pieceType, isWhite) {
+            // Only needed for non-pawn pieces
+            if (pieceType === 'P' || pieceType === 'K') return '';
+
+            // Find all pieces of the same type that can move to the same square
+            const candidates = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c] === piece && !(r === fromRow && c === fromCol)) {
+                        if (canMove(board, r, c, toRow, toCol, pieceType, isWhite)) {
+                            candidates.push({ row: r, col: c });
+                        }
+                    }
+                }
+            }
+
+            if (candidates.length === 0) return '';
+
+            // Check if file disambiguation is enough
+            const sameFile = candidates.filter(p => p.col === fromCol);
+            if (sameFile.length === 0) {
+                return String.fromCharCode(97 + fromCol); // Return file letter
+            }
+
+            // Check if rank disambiguation is enough
+            const sameRank = candidates.filter(p => p.row === fromRow);
+            if (sameRank.length === 0) {
+                return String(8 - fromRow); // Return rank number
+            }
+
+            // Need both file and rank
+            return String.fromCharCode(97 + fromCol) + String(8 - fromRow);
         }
 
         function analyzeCurrentPosition() {
@@ -2306,18 +2524,46 @@
             const isWhiteToMove = analysisMode ? analysisWhiteToMove : ((currentMoveIndex + 1) % 2 === 0);
             const fen = boardToFEN(board, isWhiteToMove);
 
-            if (fen === lastAnalyzedFen && isAnalyzing) return;
+            // Skip if analyzing the exact same position
+            if (fen === lastAnalyzedFen) return;
+
+            // Increment analysis ID to invalidate previous requests
+            currentAnalysisId++;
+            const thisAnalysisId = currentAnalysisId;
+
+            // Clear any pending analysis timeout
+            if (analysisTimeout) {
+                clearTimeout(analysisTimeout);
+                analysisTimeout = null;
+            }
+
+            // Store the FEN we're about to analyze
             lastAnalyzedFen = fen;
 
+            // Clear previous analysis
             analysisLines = {};
-            isAnalyzing = true;
+
+            // Show thinking indicator immediately
             thinkingIndicator.classList.remove('hidden');
 
+            // Stop any ongoing analysis
             stockfish.postMessage('stop');
-            stockfish.postMessage('position fen ' + fen);
-            stockfish.postMessage('go depth ' + depthSlider.value);
 
-            updateTurnIndicator();
+            // Debounce rapid position changes - wait a bit before starting new analysis
+            analysisTimeout = setTimeout(() => {
+                // Check if this request is still valid (not superseded by a newer one)
+                if (thisAnalysisId !== currentAnalysisId) {
+                    return; // A newer analysis has been requested, skip this one
+                }
+
+                isAnalyzing = true;
+
+                // Send new position and start analysis
+                stockfish.postMessage('position fen ' + fen);
+                stockfish.postMessage('go depth ' + depthSlider.value);
+
+                updateTurnIndicator();
+            }, 100); // 100ms debounce - adjust if needed
         }
 
         engineToggle.addEventListener('click', async () => {
