@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess PGN Viewer</title>
+    <title>ChessLab</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -585,9 +585,13 @@
         <div class="text-center mb-8">
             <h1
                 class="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                <span class="piece-icon piece-wK inline-block mr-2"></span> Chess PGN Viewer
+                <!-- <span class="piece-icon piece-wK inline-block mr-2"></span> -->
+                ChessLab
+                <!-- <span class="piece-icon piece-wK inline-block mr-2"></span>
+
+                <span class="piece-icon piece-bK inline-block mr-2"></span> -->
             </h1>
-            <p class="text-slate-400">Load, view, and analyze your chess games</p>
+            <p class="text-slate-400">Analyze chess games!</p>
         </div>
 
         <!-- Main Layout -->
@@ -2190,7 +2194,7 @@
                 if (versionMatch) {
                     const engineVersionEl = document.getElementById('engineVersion');
                     if (engineVersionEl) {
-                        engineVersionEl.textContent = `v${versionMatch[1]}`;
+                        engineVersionEl.textContent = `v${versionMatch[1]}-lite`;
                     }
                 }
             }
