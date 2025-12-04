@@ -789,6 +789,18 @@
                         </div>
                     </div>
 
+                    <!-- Engine Version Selector -->
+                    <div id="engineVersionSelector" class="mb-4">
+                        <label class="text-xs text-slate-400 block mb-2">Engine Version:</label>
+                        <select id="engineVersionSelect"
+                            class="w-full bg-slate-700 text-sm px-3 py-2 rounded-lg border border-slate-600">
+                            <option value="lite-single" selected>Stockfish 17.1 Lite (~7MB, Fast)</option>
+                            <option value="large-single">Stockfish 17.1 Strong (~75MB, Powerful)</option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">Large version downloads more data but provides stronger
+                            analysis.</p>
+                    </div>
+
                     <!-- Engine Settings -->
                     <div id="engineSettings" class="mb-4 hidden">
                         <div class="flex items-center gap-3 mb-2">
@@ -2066,68 +2078,67 @@
             return fen;
         }
 
-        const STOCKFISH_SOURCES = [
-            './sockfish/stockfish-17.1-lite-single-03e3232.js',
-        ];
+        // Engine version file mappings
+        const ENGINE_VERSIONS = {
+            'lite-single': './sockfish/stockfish-17.1-lite-single-03e3232.js',
+            'large-single': './sockfish/stockfish-17.1-single-a496a04.js'
+        };
+
+        const engineVersionSelect = document.getElementById('engineVersionSelect');
+        const engineVersionSelector = document.getElementById('engineVersionSelector');
+
+        function getStockfishSource() {
+            const version = engineVersionSelect.value;
+            return ENGINE_VERSIONS[version] || ENGINE_VERSIONS['lite-single'];
+        }
 
         async function initStockfish() {
             if (stockfish) return;
 
             engineLoading.classList.remove('hidden');
             engineOffState.classList.add('hidden');
+            engineVersionSelector.classList.add('hidden'); // Hide selector while loading
             engineStatus.textContent = 'Loading...';
 
-            for (let i = 0; i < STOCKFISH_SOURCES.length; i++) {
-                const source = STOCKFISH_SOURCES[i];
-                engineStatus.textContent = `Loading... (${i + 1}/${STOCKFISH_SOURCES.length})`;
-
-                try {
-                    const success = await tryLoadStockfish(source);
-                    if (success) {
-                        console.log('Stockfish loaded from:', source);
-                        return;
-                    }
-                } catch (error) {
-                    console.warn(`Failed to load from ${source}:`, error);
-                }
-            }
+            const source = getStockfishSource();
+            const versionName = engineVersionSelect.options[engineVersionSelect.selectedIndex].text;
+            engineStatus.textContent = `Loading ${versionName.split('(')[0].trim()}...`;
 
             try {
-                engineStatus.textContent = 'Trying fallback...';
-                await tryLoadStockfishInline();
+                const success = await tryLoadStockfish(source);
+                if (success) {
+                    console.log('Stockfish loaded from:', source);
+                    return;
+                }
             } catch (error) {
-                console.error('All Stockfish sources failed:', error);
-                engineStatus.textContent = 'Failed';
-                engineLoading.classList.add('hidden');
-                engineOffState.classList.remove('hidden');
-                engineEnabled = false;
-                engineToggle.classList.remove('active');
+                console.warn(`Failed to load from ${source}:`, error);
             }
+
+            // Failed to load
+            console.error('Failed to load Stockfish engine');
+            engineStatus.textContent = 'Failed to load';
+            engineLoading.classList.add('hidden');
+            engineOffState.classList.remove('hidden');
+            engineVersionSelector.classList.remove('hidden'); // Show selector again on failure
+            engineEnabled = false;
+            engineToggle.classList.remove('active');
+            alert('Failed to load engine. Try a different version.\n\nMulti-threaded versions require CORS headers.\nTry Single-threaded if you\'re not using a proper web server.');
         }
 
         function tryLoadStockfish(url) {
-            return new Promise(async (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        reject(new Error(`HTTP ${response.status}`));
-                        return;
-                    }
-
-                    const scriptText = await response.text();
-                    const blob = new Blob([scriptText], { type: 'application/javascript' });
-                    const blobUrl = URL.createObjectURL(blob);
-
-                    stockfish = new Worker(blobUrl);
+                    // Load worker directly from URL (not blob) so relative WASM paths work
+                    stockfish = new Worker(url);
 
                     let initialized = false;
                     const timeout = setTimeout(() => {
                         if (!initialized) {
                             stockfish.terminate();
                             stockfish = null;
-                            reject(new Error('Timeout'));
+                            reject(new Error('Timeout - engine took too long to initialize'));
                         }
-                    }, 10000);
+                    }, 30000); // 30 second timeout for large engines
 
                     stockfish.onmessage = (e) => {
                         const message = e.data;
@@ -2145,8 +2156,9 @@
                         clearTimeout(timeout);
                         console.error('Stockfish worker error:', e);
                         if (!initialized) {
+                            stockfish.terminate();
                             stockfish = null;
-                            reject(new Error('Worker error'));
+                            reject(new Error('Worker failed to load'));
                         } else {
                             engineStatus.textContent = 'Error';
                             engineEnabled = false;
@@ -2157,60 +2169,24 @@
                     stockfish.postMessage('uci');
 
                 } catch (error) {
+                    console.error('Failed to create worker:', error);
                     reject(error);
                 }
             });
         }
 
-        function tryLoadStockfishInline() {
-            return new Promise((resolve, reject) => {
-                try {
-                    stockfish = new Worker('./sockfish/stockfish-17.1-lite-single-03e3232.js');
-
-                    let initialized = false;
-                    const timeout = setTimeout(() => {
-                        if (!initialized) {
-                            stockfish.terminate();
-                            stockfish = null;
-                            reject(new Error('Timeout'));
-                        }
-                    }, 10000);
-
-                    stockfish.onmessage = (e) => {
-                        const message = e.data;
-
-                        if (message === 'uciok' && !initialized) {
-                            initialized = true;
-                            clearTimeout(timeout);
-                            resolve(true);
-                        }
-
-                        handleStockfishMessage(message);
-                    };
-
-                    stockfish.onerror = (e) => {
-                        clearTimeout(timeout);
-                        stockfish = null;
-                        reject(new Error('Worker error'));
-                    };
-
-                    stockfish.postMessage('uci');
-
-                } catch (error) {
-                    reject(error);
-                }
-            });
-        }
 
         function handleStockfishMessage(message) {
             // Capture Stockfish version from the id message
             if (message.startsWith('id name')) {
                 // Extract version like "10" from "Stockfish 10" or similar
-                const versionMatch = message.match(/Stockfish\s+(\d+)/i);
+                const versionMatch = message.match(/Stockfish\s+([^\s]+)/i);
                 if (versionMatch) {
                     const engineVersionEl = document.getElementById('engineVersion');
                     if (engineVersionEl) {
-                        engineVersionEl.textContent = `v${versionMatch[1]}-lite`;
+                        const selectedVersion = engineVersionSelect.value;
+                        const versionType = selectedVersion.includes('large') ? 'Strong' : 'Lite';
+                        engineVersionEl.textContent = `v${versionMatch[1]} ${versionType}`;
                     }
                 }
             }
@@ -2225,7 +2201,7 @@
                 engineLoading.classList.add('hidden');
                 engineSettings.classList.remove('hidden');
                 analysisDisplay.classList.remove('hidden');
-                engineStatus.textContent = 'Ready';
+                engineStatus.textContent = 'On';
 
                 analyzeCurrentPosition();
             }
@@ -2592,16 +2568,21 @@
                     engineSettings.classList.remove('hidden');
                     analysisDisplay.classList.remove('hidden');
                     engineOffState.classList.add('hidden');
+                    engineVersionSelector.classList.add('hidden');
                     engineStatus.textContent = 'Ready';
                     analyzeCurrentPosition();
                 }
             } else {
                 if (stockfish) {
                     stockfish.postMessage('stop');
+                    stockfish.terminate();
+                    stockfish = null;
+                    engineReady = false;
                 }
                 engineSettings.classList.add('hidden');
                 analysisDisplay.classList.add('hidden');
                 engineOffState.classList.remove('hidden');
+                engineVersionSelector.classList.remove('hidden'); // Show version selector when off
                 engineStatus.textContent = 'Off';
                 isAnalyzing = false;
             }
