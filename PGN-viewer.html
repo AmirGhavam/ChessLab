@@ -803,6 +803,7 @@
                                 <option value="1">1</option>
                                 <option value="2">2</option>
                                 <option value="3" selected>3</option>
+                                <option value="4">4</option>
                                 <option value="5">5</option>
                             </select>
                         </div>
@@ -830,7 +831,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-sm font-semibold">Evaluation</span>
-                                    <span id="evalScore" class="text-lg font-bold text-green-400">0.0</span>
+                                    <span id="evalScore" class="text-lg font-bold text-indigo-400">0.0</span>
                                 </div>
                                 <div class="text-xs text-slate-400 mb-1">
                                     Depth: <span id="currentDepth" class="text-slate-300">0</span>
@@ -888,7 +889,7 @@
         // State
         let games = [];
         let filteredGames = [];
-        let currentGameIndex = 0;
+        let currentGameIndex = -1;
         let currentMoveIndex = -1;
         let boardHistory = [];
         let autoPlayInterval = null;
@@ -1207,12 +1208,15 @@
             analysisControls.classList.add('hidden');
             analysisBadge.classList.add('hidden');
 
-            const historyEntry = boardHistory[currentMoveIndex + 1];
-            renderBoard(historyEntry.board, historyEntry.moveSquares);
-            updateTurnIndicator();
+            // Only render board from history if a game is loaded
+            if (boardHistory && boardHistory[currentMoveIndex + 1]) {
+                const historyEntry = boardHistory[currentMoveIndex + 1];
+                renderBoard(historyEntry.board, historyEntry.moveSquares);
+                updateTurnIndicator();
 
-            if (engineEnabled) {
-                analyzeCurrentPosition();
+                if (engineEnabled) {
+                    analyzeCurrentPosition();
+                }
             }
         }
 
@@ -1607,7 +1611,11 @@
         }
 
         function updateGameCounter() {
-            gameCounter.textContent = `Game ${currentGameIndex + 1} / ${games.length}`;
+            if (currentGameIndex === -1) {
+                gameCounter.textContent = `No game / ${games.length}`;
+            } else {
+                gameCounter.textContent = `Game ${currentGameIndex + 1} / ${games.length}`;
+            }
         }
 
         function selectGame(index) {
@@ -1633,6 +1641,9 @@
                 analyzeCurrentPosition();
             }
         }
+
+        // Expose selectGame globally for onclick handlers
+        window.selectGame = selectGame;
 
         function goToMove(index) {
             stopAutoPlay();
@@ -1737,12 +1748,18 @@
         function goToPrevGame() {
             if (currentGameIndex > 0) {
                 selectGame(currentGameIndex - 1);
+            } else if (currentGameIndex === -1 && games.length > 0) {
+                // If no game selected, go to last game
+                selectGame(games.length - 1);
             }
         }
 
         function goToNextGame() {
-            if (currentGameIndex < games.length - 1) {
+            if (currentGameIndex < games.length - 1 && currentGameIndex >= 0) {
                 selectGame(currentGameIndex + 1);
+            } else if (currentGameIndex === -1 && games.length > 0) {
+                // If no game selected, go to first game
+                selectGame(0);
             }
         }
 
@@ -1791,18 +1808,20 @@
 
                     if (games.length > 0) {
                         filteredGames = [...games];
-                        currentGameIndex = 0;
-                        currentMoveIndex = -1;
                         currentPage = 0;
-                        generateBoardHistory(games[0]);
+
+                        // Update the games list but don't auto-select any game
                         updateGamesList();
                         updatePagination();
-                        updateMovesList();
-                        updateGameInfo();
-                        renderBoard(boardHistory[0].board);
-                        updateMoveCounter();
                         updateGameCounter();
-                        updateTurnIndicator();
+
+                        // Reset board to initial position without loading a game
+                        currentGameIndex = -1;
+                        currentMoveIndex = -1;
+                        initBoard();
+                        renderBoard(INITIAL_BOARD);
+                        updateMoveCounter();
+                        updateGameInfo(); // Will hide game info since no game is selected
                     } else {
                         alert('No valid games found in the PGN file.');
                     }
@@ -1977,17 +1996,14 @@
         //     return game;
         // }).filter(g => g.moves.length > 0);
 
+        // Initialize with no game selected, just show the initial board
         if (games.length > 0) {
             filteredGames = [...games];
-            generateBoardHistory(games[0]);
             updateGamesList();
             updatePagination();
-            updateMovesList();
-            updateGameInfo();
-            updateMoveCounter();
-            updateGameCounter();
-            updateTurnIndicator();
         }
+        updateGameCounter();
+        updateGameInfo();
 
         // ==================== STOCKFISH ENGINE ====================
 
@@ -2300,13 +2316,8 @@
             evalScore.textContent = bestLine.evalText;
             evalScoreBar.textContent = bestLine.evalText;
 
-            if (bestLine.eval > 0.5) {
-                evalScore.className = 'text-lg font-bold text-green-400';
-            } else if (bestLine.eval < -0.5) {
-                evalScore.className = 'text-lg font-bold text-red-400';
-            } else {
-                evalScore.className = 'text-lg font-bold text-slate-300';
-            }
+            // Always use purple/indigo for evaluation score
+            evalScore.className = 'text-lg font-bold text-indigo-400';
 
             const barPercent = 50 + (Math.tanh(bestLine.eval / 3) * 50);
             evalFill.style.height = `${barPercent}%`;
