@@ -19,6 +19,53 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .board-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .board-coordinates {
+            position: relative;
+        }
+
+        .file-labels {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 4px;
+            padding: 0 2px;
+        }
+
+        .file-label {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            user-select: none;
+        }
+
+        .rank-labels {
+            position: absolute;
+            right: -24px;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 2px 0;
+        }
+
+        .rank-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            user-select: none;
         }
 
         .square {
@@ -607,8 +654,32 @@
 
                 <!-- Board -->
                 <div class="w-full max-w-lg">
-                    <div id="chessBoard" class="chess-board w-full">
-                        <!-- Board will be generated here -->
+                    <div class="board-container">
+                        <div class="board-coordinates">
+                            <div id="chessBoard" class="chess-board w-full">
+                                <!-- Board will be generated here -->
+                            </div>
+                            <div class="rank-labels">
+                                <div class="rank-label">8</div>
+                                <div class="rank-label">7</div>
+                                <div class="rank-label">6</div>
+                                <div class="rank-label">5</div>
+                                <div class="rank-label">4</div>
+                                <div class="rank-label">3</div>
+                                <div class="rank-label">2</div>
+                                <div class="rank-label">1</div>
+                            </div>
+                        </div>
+                        <div class="file-labels">
+                            <div class="file-label">a</div>
+                            <div class="file-label">b</div>
+                            <div class="file-label">c</div>
+                            <div class="file-label">d</div>
+                            <div class="file-label">e</div>
+                            <div class="file-label">f</div>
+                            <div class="file-label">g</div>
+                            <div class="file-label">h</div>
+                        </div>
                     </div>
                 </div>
 
@@ -697,6 +768,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-semibold flex items-center gap-2">
                             <span class="text-2xl">🐟</span> Stockfish
+                            <span id="engineVersion" class="text-xs text-slate-500 font-normal"></span>
                         </h2>
                         <div class="flex items-center gap-3">
                             <span id="engineStatus" class="text-xs text-slate-500">Off</span>
@@ -1955,9 +2027,7 @@
         }
 
         const STOCKFISH_SOURCES = [
-            'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js',
-            'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js',
-            'https://unpkg.com/stockfish.js@10.0.2/stockfish.js'
+            './sockfish/stockfish-17.1-lite-single-03e3232.js',
         ];
 
         async function initStockfish() {
@@ -2055,7 +2125,7 @@
         function tryLoadStockfishInline() {
             return new Promise((resolve, reject) => {
                 try {
-                    stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                    stockfish = new Worker('./sockfish/stockfish-17.1-lite-single-03e3232.js');
 
                     let initialized = false;
                     const timeout = setTimeout(() => {
@@ -2093,6 +2163,18 @@
         }
 
         function handleStockfishMessage(message) {
+            // Capture Stockfish version from the id message
+            if (message.startsWith('id name')) {
+                // Extract version like "10" from "Stockfish 10" or similar
+                const versionMatch = message.match(/Stockfish\s+(\d+)/i);
+                if (versionMatch) {
+                    const engineVersionEl = document.getElementById('engineVersion');
+                    if (engineVersionEl) {
+                        engineVersionEl.textContent = `v${versionMatch[1]}`;
+                    }
+                }
+            }
+
             if (message === 'uciok') {
                 engineReady = true;
                 stockfish.postMessage('setoption name MultiPV value ' + multiPV.value);
