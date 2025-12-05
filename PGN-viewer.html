@@ -500,13 +500,26 @@
 
         .eval-score {
             position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) rotate(-90deg);
+            right: -8px;
+            transform: translateY(-50%);
             font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            font-weight: 700;
+            background: rgba(17, 24, 39, 0.85);
+            color: #8b5cf6;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .eval-score::after {
+            content: '';
+            position: absolute;
+            left: -4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-right: 4px solid rgba(17, 24, 39, 0.85);
         }
 
         .analysis-line {
@@ -630,6 +643,39 @@
             font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
+        }
+        .move-token-white { color: #ffffff; }
+        .move-token-black { color: #4b5563; }
+
+        .eval-inline {
+            position: relative;
+            height: 10px;
+            border-radius: 9999px;
+            background: #334155;
+            overflow: hidden;
+        }
+        .eval-inline-fill-white {
+            position: absolute;
+            left: 0;
+            height: 100%;
+            background: #ffffff;
+        }
+        .eval-inline-fill-black {
+            position: absolute;
+            right: 0;
+            height: 100%;
+            background: #0f172a;
+        }
+        .eval-inline-mid { display: none; }
+        .eval-inline-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: #8b5cf6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -932,9 +978,9 @@
                     <div id="engineSettings" class="mb-4 hidden">
                         <div class="flex items-center gap-3 mb-2">
                             <label class="text-xs text-slate-400">Depth:</label>
-                            <input type="range" id="depthSlider" min="10" max="24" value="18"
+                            <input type="range" id="depthSlider" min="10" max="35" value="22"
                                 class="flex-1 accent-indigo-500">
-                            <span id="depthValue" class="text-xs text-slate-300 w-6">18</span>
+                            <span id="depthValue" class="text-xs text-slate-300 w-6">22</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <label class="text-xs text-slate-400">Lines:</label>
@@ -950,36 +996,79 @@
 
                     <!-- Evaluation Display -->
                     <div id="analysisDisplay" class="hidden">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="analysis-card rounded-lg border border-slate-700 p-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold">White to move</span>
+                                        <span id="thinkingIndicatorWhite" class="thinking-dots hidden"></span>
+                                    </div>
+                                    <span id="currentDepthWhite" class="text-xs text-slate-400">0</span>
+                                </div>
+                                <div class="flex gap-3 mb-1">
+                                    <div class="eval-bar h-28">
+                                        <div id="evalFillWhite" class="eval-fill" style="height: 50%"></div>
+                                        <span id="evalScoreBarWhite" class="eval-score text-white">0.0</span>
+                                    </div>
+                                </div>
 
-                        <div class="flex gap-3 mb-3">
-                            <!-- Eval Bar -->
-                            <div class="eval-bar h-32">
-                                <div id="evalFill" class="eval-fill" style="height: 50%"></div>
-                                <span id="evalScoreBar" class="eval-score text-white">0.0</span>
+                                <div class="flex-1">
+                                        <div class="flex items-center justify-between pl-0">
+                                            <span class="text-xs font-semibold text-slate-400">Eval</span>
+                                            <div class="eval-inline w-full max-w-[160px] ml-2" id="evalInlineWhite">
+                                                <div class="eval-inline-fill-black" id="evalInlineWhiteLeftFill" style="width: 0%"></div>
+                                                <div class="eval-inline-fill-white" id="evalInlineWhiteRightFill" style="width: 0%"></div>
+                                                <div class="eval-inline-mid"></div>
+                                                <span id="evalInlineWhiteLabel" class="eval-inline-label">0.0</span>
+                                            </div>
+                                        </div>
+                                    <div class="text-xs text-slate-400 pl-0 mb-3">
+                                        Best move: <span id="bestMoveWhite" class="best-move">-</span>
+                                    </div>
+                                </div>
+                                
+                                <div id="analysisLinesWhite" class="space-y-1">
+                                    <p class="text-slate-500 text-xs text-center py-2">Start engine to analyze</p>
+                                </div>
+                            </div>
+
+                            <div class="analysis-card rounded-lg border border-slate-700 p-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold">Black to move</span>
+                                        <span id="thinkingIndicatorBlack" class="thinking-dots hidden"></span>
+                                    </div>
+                                    <span id="currentDepthBlack" class="text-xs text-slate-400">0</span>
+                                </div>
+                                <div class="flex gap-3 mb-1">
+                                    <div class="eval-bar h-28">
+                                        <div id="evalFillBlack" class="eval-fill" style="height: 50%"></div>
+                                        <span id="evalScoreBarBlack" class="eval-score text-white">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                        <div class="flex items-center justify-between pl-0">
+                                            <span class="text-xs font-semibold text-slate-400">Eval</span>
+                                            <div class="eval-inline w-full max-w-[160px] ml-2" id="evalInlineBlack">
+                                                <div class="eval-inline-fill-black" id="evalInlineBlackLeftFill" style="width: 0%"></div>
+                                                <div class="eval-inline-fill-white" id="evalInlineBlackRightFill" style="width: 0%"></div>
+                                                <div class="eval-inline-mid"></div>
+                                                <span id="evalInlineBlackLabel" class="eval-inline-label">0.0</span>
+                                            </div>
+                                        </div>
+                                    <div class="text-xs text-slate-400 pl-0 mb-3">
+                                        Best move: <span id="bestMoveBlack" class="best-move">-</span>
+                                    </div>
+                                </div>
+                                
+                                <div id="analysisLinesBlack" class="space-y-1">
+                                    <p class="text-slate-500 text-xs text-center py-2">Start engine to analyze</p>
+                                </div>
                             </div>
                         </div>
 
-
-                        <!-- Analysis Info -->
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-0">
-                                <span class="text-xs font-semibold text-slate-400">Eval:</span>
-                                <span id="evalScore" class="text-lg font-bold text-slate-300">0.0</span>
-                            </div>
-                            <div class="text-xs text-slate-400 mb-0">
-                                Depth: <span id="currentDepth" class="text-slate-300">0</span>
-                                <span id="thinkingIndicator" class="thinking-dots ml-2 hidden"></span>
-                            </div>
-                            <div class="text-xs text-slate-400 mb-2">
-                                Best move: <span id="bestMove" class="best-move">-</span>
-                            </div>
-                        </div>
-                        <!-- </div> -->
-
-
-                        <!-- Analysis Lines -->
-                        <div id="analysisLines" class="space-y-1 max-h-40 overflow-y-auto">
-                            <p class="text-slate-500 text-xs text-center py-2">Start engine to analyze</p>
+                        <div class="mt-3 text-center text-xs text-slate-400">
+                            <span>💡 Being a move ahead or behind can reshape the position. Compare both sides and you will spot ideas you might miss. As a wise man once said… probably.</span>
                         </div>
                     </div>
 
@@ -2451,7 +2540,8 @@
         let engineEnabled = false;
         let engineReady = false;
         let isAnalyzing = false;
-        let analysisLines = {};
+        let currentAnalysisSide = null;
+        let analysisBySide = { white: {}, black: {} };
         let lastAnalyzedFen = '';
         let currentAnalysisId = 0; // Track analysis requests to cancel outdated ones
         let analysisTimeout = null; // For debouncing rapid position changes
@@ -2466,13 +2556,24 @@
         const depthSlider = document.getElementById('depthSlider');
         const depthValue = document.getElementById('depthValue');
         const multiPV = document.getElementById('multiPV');
-        const evalFill = document.getElementById('evalFill');
-        const evalScore = document.getElementById('evalScore');
-        const evalScoreBar = document.getElementById('evalScoreBar');
-        const currentDepth = document.getElementById('currentDepth');
-        const bestMoveEl = document.getElementById('bestMove');
-        const analysisLinesEl = document.getElementById('analysisLines');
-        const thinkingIndicator = document.getElementById('thinkingIndicator');
+        const evalFillWhite = document.getElementById('evalFillWhite');
+        const evalScoreBarWhite = document.getElementById('evalScoreBarWhite');
+        const currentDepthWhite = document.getElementById('currentDepthWhite');
+        const bestMoveWhite = document.getElementById('bestMoveWhite');
+        const analysisLinesWhite = document.getElementById('analysisLinesWhite');
+        const thinkingIndicatorWhite = document.getElementById('thinkingIndicatorWhite');
+        const evalInlineWhiteLeftFill = document.getElementById('evalInlineWhiteLeftFill');
+        const evalInlineWhiteRightFill = document.getElementById('evalInlineWhiteRightFill');
+        const evalInlineWhiteLabel = document.getElementById('evalInlineWhiteLabel');
+        const evalFillBlack = document.getElementById('evalFillBlack');
+        const evalScoreBarBlack = document.getElementById('evalScoreBarBlack');
+        const currentDepthBlack = document.getElementById('currentDepthBlack');
+        const bestMoveBlack = document.getElementById('bestMoveBlack');
+        const analysisLinesBlack = document.getElementById('analysisLinesBlack');
+        const thinkingIndicatorBlack = document.getElementById('thinkingIndicatorBlack');
+        const evalInlineBlackLeftFill = document.getElementById('evalInlineBlackLeftFill');
+        const evalInlineBlackRightFill = document.getElementById('evalInlineBlackRightFill');
+        const evalInlineBlackLabel = document.getElementById('evalInlineBlackLabel');
 
         // Convert board array to FEN string
         function boardToFEN(board, isWhiteToMove) {
@@ -2639,33 +2740,35 @@
             }
 
             if (message.startsWith('bestmove')) {
-                isAnalyzing = false;
-                thinkingIndicator.classList.add('hidden');
+                if (currentAnalysisSide === 'white') {
+                    const board = getCurrentBoard();
+                    const fenBlack = boardToFEN(board, false);
+                    currentAnalysisSide = 'black';
+                    stockfish.postMessage('position fen ' + fenBlack);
+                    stockfish.postMessage('go depth ' + depthSlider.value);
+                } else {
+                    isAnalyzing = false;
+                    thinkingIndicatorWhite.classList.add('hidden');
+                    thinkingIndicatorBlack.classList.add('hidden');
+                }
             }
         }
 
         function parseAnalysisInfo(info) {
-            // Ignore results if we're not actively analyzing (analysis was cancelled)
-            if (!isAnalyzing) return;
-
+            if (!isAnalyzing || !currentAnalysisSide) return;
             const depthMatch = info.match(/depth (\d+)/);
             const pvMatch = info.match(/multipv (\d+)/);
             const scoreMatch = info.match(/score (cp|mate) (-?\d+)/);
             const pvMovesMatch = info.match(/ pv (.+)/);
-
             if (!depthMatch || !scoreMatch) return;
-
             const depth = parseInt(depthMatch[1]);
             const pvNum = pvMatch ? parseInt(pvMatch[1]) : 1;
             const scoreType = scoreMatch[1];
             const scoreValue = parseInt(scoreMatch[2]);
             const pvMoves = pvMovesMatch ? pvMovesMatch[1].split(' ').slice(0, 8) : [];
-
             let evalValue;
             let evalText;
-
-            const isWhiteToMove = analysisMode ? analysisWhiteToMove : ((currentMoveIndex + 1) % 2 === 0);
-
+            const isWhiteToMove = currentAnalysisSide === 'white';
             if (scoreType === 'mate') {
                 const mateIn = scoreValue;
                 evalValue = mateIn > 0 ? 100 : -100;
@@ -2681,103 +2784,88 @@
                 }
                 evalText = (evalValue >= 0 ? '+' : '') + evalValue.toFixed(1);
             }
-
-            analysisLines[pvNum] = {
-                depth,
-                eval: evalValue,
-                evalText,
-                moves: pvMoves
-            };
-
-            updateAnalysisDisplay(depth);
+            analysisBySide[currentAnalysisSide][pvNum] = { depth, eval: evalValue, evalText, moves: pvMoves };
+            updateAnalysisDisplayForSide(currentAnalysisSide, depth);
         }
 
-        function updateAnalysisDisplay(depth) {
-            currentDepth.textContent = depth;
-            thinkingIndicator.classList.remove('hidden');
-
-            // Find the line with the best evaluation (highest absolute value for the current side)
-            let bestLine = null;
+        function updateAnalysisDisplayForSide(side, depth) {
             const numLines = parseInt(multiPV.value);
-
+            const lines = analysisBySide[side];
+            let bestLine = null;
             for (let i = 1; i <= numLines; i++) {
-                const line = analysisLines[i];
+                const line = lines[i];
                 if (!line) continue;
-
-                if (!bestLine) {
-                    bestLine = line;
-                } else {
-                    // Compare evaluations - higher is better for the side to move
-                    if (line.eval > bestLine.eval) {
-                        bestLine = line;
-                    }
-                }
+                if (!bestLine || line.eval > bestLine.eval) bestLine = line;
             }
-
             if (!bestLine) return;
 
-            // Display the best evaluation
-            evalScore.textContent = bestLine.evalText;
-            evalScoreBar.textContent = bestLine.evalText;
-
-            // Always use purple/indigo for evaluation score
-            evalScore.className = 'text-lg font-bold text-indigo-400';
-
-            const barPercent = 50 + (Math.tanh(bestLine.eval / 3) * 50);
-            evalFill.style.height = `${barPercent}%`;
-
-            // Display the best move from the best line
-            if (bestLine.moves.length > 0) {
-                bestMoveEl.textContent = formatMove(bestLine.moves[0]);
+            if (side === 'white') {
+                currentDepthWhite.textContent = "Depth: " + depth;
+                thinkingIndicatorWhite.classList.remove('hidden');
+                evalScoreBarWhite.textContent = bestLine.evalText;
+                const barPercent = 50 + (Math.tanh(bestLine.eval / 6) * 50);
+                evalFillWhite.style.height = `${barPercent}%`;
+                evalScoreBarWhite.style.top = `${100 - barPercent}%`;
+                const whitePercent = barPercent;
+                const blackPercent = 100 - barPercent;
+                evalInlineWhiteRightFill.style.width = `${whitePercent}%`;
+                evalInlineWhiteLeftFill.style.width = `${blackPercent}%`;
+                evalInlineWhiteLabel.textContent = bestLine.evalText;
+                if (bestLine.moves.length > 0) bestMoveWhite.textContent = formatMove(bestLine.moves[0]);
+            } else {
+                currentDepthBlack.textContent = "Depth: " + depth;;
+                thinkingIndicatorBlack.classList.remove('hidden');
+                evalScoreBarBlack.textContent = bestLine.evalText;
+                const barPercent = 50 + (Math.tanh(bestLine.eval / 6) * 50);
+                evalFillBlack.style.height = `${barPercent}%`;
+                evalScoreBarBlack.style.top = `${100 - barPercent}%`;
+                const whitePercent = barPercent;
+                const blackPercent = 100 - barPercent;
+                evalInlineBlackRightFill.style.width = `${whitePercent}%`;
+                evalInlineBlackLeftFill.style.width = `${blackPercent}%`;
+                evalInlineBlackLabel.textContent = bestLine.evalText;
+                if (bestLine.moves.length > 0) bestMoveBlack.textContent = formatMove(bestLine.moves[0]);
             }
 
-            // Display all analysis lines sorted by evaluation (best first)
             const sortedLines = [];
             for (let i = 1; i <= numLines; i++) {
-                if (analysisLines[i]) {
-                    sortedLines.push(analysisLines[i]);
-                }
+                if (lines[i]) sortedLines.push(lines[i]);
             }
-
-            // Sort by evaluation (descending - best first)
             sortedLines.sort((a, b) => b.eval - a.eval);
 
             let linesHTML = '';
             for (const line of sortedLines) {
-                // Convert UCI moves to SAN by simulating the position
-                const movesStr = formatMoveSequence(line.moves);
-                // Use purple/indigo color for all evaluations (matching the theme)
+                const movesStr = formatMoveSequenceColored(line.moves, side);
                 const evalClass = 'text-indigo-400';
-
                 linesHTML += `
                     <div class="analysis-line">
                         <span class="${evalClass} font-bold">${line.evalText}</span>
-                        <span class="text-slate-300 ml-2">${movesStr}</span>
+                        <span class="ml-2">${movesStr}</span>
                     </div>
                 `;
             }
-            analysisLinesEl.innerHTML = linesHTML || '<p class="text-slate-500 text-xs text-center py-2">Analyzing...</p>';
+            if (side === 'white') {
+                analysisLinesWhite.innerHTML = linesHTML || '<p class="text-slate-500 text-xs text-center py-2">Analyzing...</p>';
+            } else {
+                analysisLinesBlack.innerHTML = linesHTML || '<p class="text-slate-500 text-xs text-center py-2">Analyzing...</p>';
+            }
         }
 
-        // Format a sequence of UCI moves by simulating the position
-        function formatMoveSequence(uciMoves) {
+        function formatMoveSequenceColored(uciMoves, side) {
             if (!uciMoves || uciMoves.length === 0) return '';
-
             const currentBoard = getCurrentBoard();
             let tempBoard = copyBoard(currentBoard);
-            const sanMoves = [];
-
+            const tokens = [];
             for (let i = 0; i < uciMoves.length; i++) {
                 const uciMove = uciMoves[i];
                 const sanMove = formatMove(uciMove, tempBoard);
-                sanMoves.push(sanMove);
-
-                // Apply the move to the temp board for the next conversion
+                const isWhiteMove = (side === 'white') ? (i % 2 === 0) : (i % 2 !== 0);
+                const cls = isWhiteMove ? 'move-token-white' : 'move-token-black';
+                tokens.push(`<span class="${cls}">${sanMove}</span>`);
                 tempBoard = applyUCIMove(tempBoard, uciMove);
-                if (!tempBoard) break; // If move application fails, stop
+                if (!tempBoard) break;
             }
-
-            return sanMoves.join(' ');
+            return tokens.join(' ');
         }
 
         // Apply a UCI move to a board (returns new board)
@@ -2938,51 +3026,29 @@
 
         function analyzeCurrentPosition() {
             if (!engineReady || !engineEnabled) return;
-
             const board = getCurrentBoard();
-            const isWhiteToMove = analysisMode ? analysisWhiteToMove : ((currentMoveIndex + 1) % 2 === 0);
-            const fen = boardToFEN(board, isWhiteToMove);
-
-            // Skip if analyzing the exact same position
-            if (fen === lastAnalyzedFen) return;
-
-            // Increment analysis ID to invalidate previous requests
+            const fenWhite = boardToFEN(board, true);
+            const fenBlack = boardToFEN(board, false);
+            const marker = fenWhite + '|' + fenBlack;
+            if (marker === lastAnalyzedFen) return;
             currentAnalysisId++;
             const thisAnalysisId = currentAnalysisId;
-
-            // Clear any pending analysis timeout
             if (analysisTimeout) {
                 clearTimeout(analysisTimeout);
                 analysisTimeout = null;
             }
-
-            // Store the FEN we're about to analyze
-            lastAnalyzedFen = fen;
-
-            // Clear previous analysis
-            analysisLines = {};
-
-            // Show thinking indicator immediately
-            thinkingIndicator.classList.remove('hidden');
-
-            // Stop any ongoing analysis
+            lastAnalyzedFen = marker;
+            analysisBySide = { white: {}, black: {} };
+            thinkingIndicatorWhite.classList.remove('hidden');
+            thinkingIndicatorBlack.classList.remove('hidden');
             stockfish.postMessage('stop');
-
-            // Debounce rapid position changes - wait a bit before starting new analysis
             analysisTimeout = setTimeout(() => {
-                // Check if this request is still valid (not superseded by a newer one)
-                if (thisAnalysisId !== currentAnalysisId) {
-                    return; // A newer analysis has been requested, skip this one
-                }
-
+                if (thisAnalysisId !== currentAnalysisId) return;
                 isAnalyzing = true;
-
-                // Send new position and start analysis
-                stockfish.postMessage('position fen ' + fen);
+                currentAnalysisSide = 'white';
+                stockfish.postMessage('position fen ' + fenWhite);
                 stockfish.postMessage('go depth ' + depthSlider.value);
-
-                updateTurnIndicator();
-            }, 100); // 100ms debounce - adjust if needed
+            }, 100);
         }
 
         engineToggle.addEventListener('click', async () => {
