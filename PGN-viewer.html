@@ -96,7 +96,8 @@
 
         .theme-gray {
             --board-light: #e0e0e0;
-            --board-dark: #808080;
+            --board-dark: #a0a0a0;
+            /* Lighter gray (was #808080) */
         }
 
         .square {
@@ -128,12 +129,23 @@
             box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.6);
         }
 
-        .square.last-move.light {
-            background: linear-gradient(135deg, #cdd26a 0%, #c4ca5e 100%);
+        /* Adaptive last move highlight - Stronger Glossy Style */
+        .square.last-move.light,
+        .square.last-move.dark {
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            /* Increased opacity */
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.4);
+            /* Stronger inner glow */
+            background-blend-mode: overlay;
         }
 
-        .square.last-move.dark {
-            background: linear-gradient(135deg, #aaa23a 0%, #9a9230 100%);
+        /* Fallback/Overlay - Stronger Shine */
+        .square.last-move::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.2) 100%);
+            pointer-events: none;
         }
 
         .square.drag-over {
@@ -278,6 +290,53 @@
         .move-item.active {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
+        }
+
+        /* Promotion Modal */
+        .promotion-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 100;
+            /* Ensure high z-index */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .promotion-modal.hidden {
+            display: none;
+        }
+
+        .promotion-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .promotion-option:hover {
+            background: rgba(99, 102, 241, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .promotion-option .piece {
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .game-card {
@@ -572,46 +631,6 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-
-        /* Promotion Modal */
-        .promotion-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .promotion-modal.hidden {
-            display: none;
-        }
-
-        .promotion-pieces {
-            display: flex;
-            gap: 8px;
-            background: #1e293b;
-            padding: 16px;
-            border-radius: 12px;
-            border: 2px solid #475569;
-        }
-
-        .promotion-piece {
-            width: 60px;
-            height: 60px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .promotion-piece:hover {
-            background-color: rgba(99, 102, 241, 0.3);
-            transform: scale(1.1);
-        }
     </style>
 </head>
 
@@ -626,12 +645,7 @@
         <p id="loadingStats" class="text-slate-500 text-sm mt-2"></p>
     </div>
 
-    <!-- Promotion Modal -->
-    <div id="promotionModal" class="promotion-modal hidden">
-        <div class="promotion-pieces" id="promotionPieces">
-            <!-- Pieces will be added dynamically -->
-        </div>
-    </div>
+
 
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
@@ -727,6 +741,21 @@
                                 <div class="rank-label">1</div>
                             </div>
                         </div>
+                        <!-- Promotion Modal -->
+                        <div id="promotionModal" class="promotion-modal hidden">
+                            <div class="promotion-option" onclick="selectPromotion('q')">
+                                <div class="piece piece-wQ"></div>
+                            </div>
+                            <div class="promotion-option" onclick="selectPromotion('r')">
+                                <div class="piece piece-wR"></div>
+                            </div>
+                            <div class="promotion-option" onclick="selectPromotion('b')">
+                                <div class="piece piece-wB"></div>
+                            </div>
+                            <div class="promotion-option" onclick="selectPromotion('n')">
+                                <div class="piece piece-wN"></div>
+                            </div>
+                        </div>
                         <div class="file-labels">
                             <div class="file-label">a</div>
                             <div class="file-label">b</div>
@@ -740,10 +769,13 @@
                     </div>
 
                     <!-- Board Editing Controls -->
-                    <div class="flex items-center justify-between mt-3 text-xs">
+                    <div class="flex items-center justify-between mt-1 text-xs">
                         <div class="flex items-center gap-4">
-                            <span class="text-slate-400">💡 Drag/Click to move • Right-click to remove</span>
-                            <div class="flex items-center gap-2 border-l border-slate-700 pl-4">
+                            <span class="text-slate-400">💡 Drag/Click to move • Right-click any piece to remove <br> 💡
+                                Movement Rules: Same color → SWAP, Opposite color → CAPTURE, Empty square → MOVE</span>
+                            <!-- <span class="text-slate-400">💡 Movement Rules: Same color → SWAP, Opposite color →
+                                CAPTUR,<br> Empty square → MOVE</span> -->
+                            <!-- <div class="flex items-center gap-1 border-l border-slate-700 pl-4">
                                 <span class="text-slate-400">Theme:</span>
                                 <select id="boardThemeSelect"
                                     class="bg-slate-700 text-xs px-2 py-1 rounded border border-slate-600 text-slate-300 focus:outline-none focus:border-indigo-500">
@@ -753,18 +785,56 @@
                                     <option value="theme-purple">Royal Purple</option>
                                     <option value="theme-gray">Modern Gray</option>
                                 </select>
-                            </div>
+                            </div> -->
                         </div>
-                        <button id="undoEditBtn" onclick="undoLastMove()"
+                        <!-- <button id="undoEditBtn" onclick="undoLastMove()"
                             class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 transition-colors opacity-50"
                             disabled>
                             ↩️ Undo
-                        </button>
+                        </button> -->
                     </div>
                 </div>
 
                 <!-- Navigation Controls -->
                 <div class="w-full max-w-2xl mt-6 space-y-4">
+                    <!-- Move Navigation -->
+                    <!-- Playback and Game Controls -->
+                    <!-- Playback and Game Controls -->
+                    <div class="flex items-center justify-center gap-2 whitespace-nowrap overflow-x-auto py-1">
+                        <button id="btnAutoPlay"
+                            class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors">
+                            ▶ Auto
+                        </button>
+                        <select id="playSpeed"
+                            class="bg-slate-700 text-xs px-2 py-1.5 rounded border border-slate-600 text-slate-300 focus:outline-none focus:border-indigo-500">
+                            <option value="2000">Slow</option>
+                            <option value="1000" selected>Normal</option>
+                            <option value="500">Fast</option>
+                            <option value="250">Very Fast</option>
+                        </select>
+                        <button id="btnResetBoard"
+                            class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors"
+                            title="Start New Board">
+                            ➕ New
+                        </button>
+                        <button id="undoEditBtn" onclick="undoLastMove()"
+                            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300 transition-colors opacity-50"
+                            disabled>
+                            ↩️ Undo
+                        </button>
+                        <div class="flex items-center gap-2 border-l border-slate-700 pl-2">
+                            <span class="text-slate-400 text-xs">Theme:</span>
+                            <select id="boardThemeSelect"
+                                class="bg-slate-700 text-xs px-2 py-1.5 rounded border border-slate-600 text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <option value="theme-classic" selected>Classic</option>
+                                <option value="theme-wood">Wood</option>
+                                <option value="theme-ocean">Ocean</option>
+                                <option value="theme-purple">Purple</option>
+                                <option value="theme-gray">Gray</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Move Navigation -->
                     <div class="flex items-center justify-center gap-2">
                         <button id="btnFirst"
@@ -790,25 +860,6 @@
                             class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
                             title="Last Move">
                             ⏭️
-                        </button>
-                    </div>
-
-                    <!-- Playback and Game Controls -->
-                    <div class="flex items-center justify-center gap-3 flex-wrap">
-                        <button id="btnAutoPlay"
-                            class="nav-btn bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-5 py-2 rounded-lg font-medium">
-                            ▶ Auto Play
-                        </button>
-                        <select id="playSpeed" class="bg-slate-700 px-3 py-2 rounded-lg border border-slate-600">
-                            <option value="2000">Slow</option>
-                            <option value="1000" selected>Normal</option>
-                            <option value="500">Fast</option>
-                            <option value="250">Very Fast</option>
-                        </select>
-                        <button id="btnResetBoard"
-                            class="nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-5 py-2 rounded-lg font-medium"
-                            title="Reset to Starting Position">
-                            🔄 Reset
                         </button>
                     </div>
 
@@ -1110,6 +1161,13 @@
         function handleDragStart(row, col, piece) {
             draggedPiece = piece;
             draggedFrom = { row, col };
+
+            // Visually select the square without re-rendering to avoid breaking drag
+            selectedSquare = { row, col };
+            const square = chessBoard.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+            if (square) {
+                square.classList.add('selected');
+            }
         }
 
         // Handle drop on square
@@ -1123,12 +1181,16 @@
             if (fromRow === toRow && fromCol === toCol) {
                 draggedPiece = null;
                 draggedFrom = null;
+                selectedSquare = null;
+                renderBoard(getCurrentBoard());
                 return;
             }
 
             executeFreeMove(fromRow, fromCol, toRow, toCol);
             draggedPiece = null;
             draggedFrom = null;
+            selectedSquare = null;
+            renderBoard(getCurrentBoard());
         }
 
         // Get current board (either analysis or game)
@@ -1183,6 +1245,16 @@
 
                     pieceDiv.addEventListener('dragend', () => {
                         pieceDiv.classList.remove('dragging');
+                        // If we are still selecting the dragged piece (drag cancelled), deselect it
+                        if (selectedSquare && draggedFrom &&
+                            selectedSquare.row === draggedFrom.row &&
+                            selectedSquare.col === draggedFrom.col) {
+                            selectedSquare = null;
+                            const square = chessBoard.querySelector(`.square[data-row="${draggedFrom.row}"][data-col="${draggedFrom.col}"]`);
+                            if (square) square.classList.remove('selected');
+                        }
+                        draggedPiece = null;
+                        draggedFrom = null;
                     });
 
                     square.innerHTML = '';
@@ -1234,6 +1306,94 @@
 
             if (!movingPiece) return;
 
+            // Protect kings from being captured
+            if (targetPiece && targetPiece.toUpperCase() === 'K') {
+                return; // Cannot capture a king
+            }
+
+            // Check for pawn promotion
+            const isMovingWhite = movingPiece === movingPiece.toUpperCase();
+            const isPawn = movingPiece.toUpperCase() === 'P';
+            const isPromotion = isPawn && ((isMovingWhite && toRow === 0) || (!isMovingWhite && toRow === 7));
+
+            if (isPromotion) {
+                // Store move details for promotion selection
+                pendingPromotion = {
+                    fromRow, fromCol, toRow, toCol,
+                    movingPiece, targetPiece,
+                    isSwap: targetPiece && isMovingWhite === (targetPiece === targetPiece.toUpperCase())
+                };
+
+                // Show modal
+                const modal = document.getElementById('promotionModal');
+                modal.classList.remove('hidden');
+
+                // Update modal pieces based on color
+                const pieces = modal.querySelectorAll('.piece');
+                const color = isMovingWhite ? 'w' : 'b';
+                pieces[0].className = `piece piece-${color}Q`;
+                pieces[1].className = `piece piece-${color}R`;
+                pieces[2].className = `piece piece-${color}B`;
+                pieces[3].className = `piece piece-${color}N`;
+
+                return; // Wait for selection
+            }
+
+            finalizeMove(fromRow, fromCol, toRow, toCol, movingPiece, targetPiece);
+        }
+
+        let pendingPromotion = null;
+
+        function selectPromotion(type) {
+            if (!pendingPromotion) return;
+
+            const { fromRow, fromCol, toRow, toCol, movingPiece, targetPiece } = pendingPromotion;
+            const isWhite = movingPiece === 'P';
+            const promotedPiece = isWhite ? type.toUpperCase() : type.toLowerCase();
+
+            // Hide modal
+            document.getElementById('promotionModal').classList.add('hidden');
+
+            // Execute move with promoted piece
+            finalizeMove(fromRow, fromCol, toRow, toCol, promotedPiece, targetPiece);
+            pendingPromotion = null;
+        }
+
+        function finalizeMove(fromRow, fromCol, toRow, toCol, movingPiece, targetPiece) {
+            // Check if this move matches the next move in the current game
+            const game = games[currentGameIndex];
+            if (game && currentMoveIndex < game.moves.length - 1) {
+                // We need to know where the next move lands.
+                // The `nextMove` object from PGN parser should ideally have from/to coords.
+                // Our current parser structure in `handleFile` -> `parsePGN` -> `parseGameText`
+                // stores moves as strings (SAN). We need to see how `boardHistory` stores them.
+
+                const nextHistoryState = boardHistory[currentMoveIndex + 2]; // +2 because history is 0-indexed (start pos) + currentMoveIndex
+
+                if (nextHistoryState) {
+                    const nextMoveSquares = nextHistoryState.moveSquares; // e.g. ["6,4", "4,4"] (from, to)
+                    if (nextMoveSquares && nextMoveSquares.length === 2) {
+                        const [nextFromR, nextFromC] = nextMoveSquares[0].split(',').map(Number);
+                        const [nextToR, nextToC] = nextMoveSquares[1].split(',').map(Number);
+
+                        if (fromRow === nextFromR && fromCol === nextFromC && toRow === nextToR && toCol === nextToC) {
+                            // MATCH! The user played the next move of the game.
+                            // Instead of editing the board, just advance the game.
+                            goToNext();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // If we are here, it's a deviation or free-form move
+            if (!analysisMode) {
+                analysisMode = true;
+                analysisBoard = copyBoard(getCurrentBoard());
+                analysisWhiteToMove = (currentMoveIndex + 1) % 2 === 0; // Set turn for analysis mode
+            }
+
+            const board = analysisBoard;
             const isMovingWhite = movingPiece === movingPiece.toUpperCase();
             const isTargetWhite = targetPiece && targetPiece === targetPiece.toUpperCase();
 
@@ -1241,11 +1401,6 @@
             saveUndoState();
 
             if (targetPiece) {
-                // Protect kings from being captured
-                if (targetPiece.toUpperCase() === 'K') {
-                    return; // Cannot capture a king
-                }
-
                 if (isMovingWhite === isTargetWhite) {
                     // Same color - swap pieces
                     board[toRow][toCol] = movingPiece;
@@ -1271,7 +1426,7 @@
 
         // Undo history for board editing
         let undoHistory = [];
-        const MAX_UNDO_HISTORY = 50;
+        const MAX_UNDO_HISTORY = 200;
 
         function saveUndoState() {
             if (analysisBoard) {
@@ -1862,25 +2017,34 @@
 
         function selectGame(index) {
             stopAutoPlay();
-            resetToGamePosition();
-            currentGameIndex = index;
-            currentMoveIndex = -1;
-            generateBoardHistory(games[index]);
-            updateGamesList();
-            updateMovesList();
-            updateGameInfo();
-            renderBoard(boardHistory[0].board);
-            updateMoveCounter();
-            updateGameCounter();
-            updateTurnIndicator();
 
-            const activeCard = gamesList.querySelector('.game-card.active');
-            if (activeCard) {
-                activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Only reset analysis if we are actually in analysis mode
+            if (analysisMode) {
+                resetToGamePosition();
             }
 
-            if (engineEnabled) {
-                analyzeCurrentPosition();
+            currentGameIndex = index;
+            currentMoveIndex = -1;
+
+            // Ensure we have a valid game before generating history
+            if (games[index]) {
+                generateBoardHistory(games[index]);
+                updateGamesList();
+                updateMovesList();
+                updateGameInfo();
+                renderBoard(boardHistory[0].board);
+                updateMoveCounter();
+                updateGameCounter();
+                updateTurnIndicator();
+
+                const activeCard = gamesList.querySelector('.game-card.active');
+                if (activeCard) {
+                    activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                if (engineEnabled) {
+                    analyzeCurrentPosition();
+                }
             }
         }
 
@@ -2089,10 +2253,44 @@
         document.getElementById('btnNextGame').addEventListener('click', goToNextGame);
         document.getElementById('btnAutoPlay').addEventListener('click', toggleAutoPlay);
         document.getElementById('btnResetBoard').addEventListener('click', () => {
-            if (analysisMode) {
-                resetToGamePosition();
+            try {
+                // Stop autoplay if running
+                if (typeof isAutoPlaying !== 'undefined' && isAutoPlaying) toggleAutoPlay();
+
+                // Reset game state
+                currentGameIndex = -1;
+                currentMoveIndex = -1;
+
+                // Safety check for INITIAL_BOARD and copyBoard
+                const initialBoard = (typeof INITIAL_BOARD !== 'undefined') ? INITIAL_BOARD : [];
+                const boardCopy = (typeof copyBoard === 'function') ? copyBoard(initialBoard) : JSON.parse(JSON.stringify(initialBoard));
+
+                boardHistory = [{ board: boardCopy, move: null }];
+
+                // Reset analysis/edit state
+                analysisMode = false;
+                analysisBoard = null;
+                undoHistory = [];
+                if (typeof updateUndoButton === 'function') updateUndoButton();
+
+                // Reset selection
+                selectedSquare = null;
+                draggedPiece = null;
+                draggedFrom = null;
+
+                // Reset UI
+                renderBoard(initialBoard);
+                if (typeof updateMoveCounter === 'function') updateMoveCounter();
+                if (typeof updateGameCounter === 'function') updateGameCounter();
+                if (typeof updateGameInfo === 'function') updateGameInfo();
+
+                // Clear analysis if engine is on
+                if (engineEnabled && typeof analyzeCurrentPosition === 'function') {
+                    analyzeCurrentPosition();
+                }
+            } catch (error) {
+                console.error('Error resetting board:', error);
             }
-            goToFirst();
         });
         document.getElementById('btnResetPosition').addEventListener('click', resetToGamePosition);
 
