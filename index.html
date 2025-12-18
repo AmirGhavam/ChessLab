@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChessLab</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -861,8 +862,14 @@
                     <!-- Playback and Game Controls -->
                     <div class="flex items-center justify-center gap-2 whitespace-nowrap overflow-x-auto py-1">
                         <button id="btnAutoPlay"
-                            class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors">
-                            ▶ Auto
+                            class="flex items-center gap-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors">
+                            <span id="btnAutoPlayIcon">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                    fill="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                            </span>
+                            <span>Auto</span>
                         </button>
                         <select id="playSpeed"
                             class="bg-slate-700 text-xs px-2 py-1.5 rounded border border-slate-600 text-slate-300 focus:outline-none focus:border-indigo-500">
@@ -872,14 +879,24 @@
                             <option value="250">Very Fast</option>
                         </select>
                         <button id="btnResetBoard"
-                            class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors"
+                            class="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 px-3 py-1.5 rounded text-xs text-white font-medium transition-colors"
                             title="Start New Board">
-                            ➕ New
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>New</span>
                         </button>
                         <button id="undoEditBtn" onclick="undoLastMove()"
-                            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300 transition-colors opacity-50"
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300 transition-colors opacity-50"
                             disabled>
-                            ↩️ Undo
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                            <span>Undo</span>
                         </button>
                         <div class="flex items-center gap-2 border-l border-slate-700 pl-2">
                             <span class="text-slate-400 text-xs">Theme:</span>
@@ -897,54 +914,83 @@
                     <!-- Move Navigation -->
                     <div class="flex items-center justify-center gap-2">
                         <button id="btnFirst"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium flex items-center justify-center"
                             title="First Move">
-                            ⏮️
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="11 17 6 12 11 7"></polyline>
+                                <polyline points="18 17 13 12 18 7"></polyline>
+                            </svg>
                         </button>
                         <button id="btnPrev"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium flex items-center justify-center"
                             title="Previous Move">
-                            ◀️
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
                         </button>
                         <span id="moveCounter"
                             class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 min-w-24 text-center">
                             0 / 0
                         </span>
                         <button id="btnNext"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium flex items-center justify-center"
                             title="Next Move">
-                            ▶️
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
                         </button>
                         <button id="btnLast"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-3 rounded-lg font-medium flex items-center justify-center"
                             title="Last Move">
-                            ⏭️
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="13 17 18 12 13 7"></polyline>
+                                <polyline points="6 17 11 12 6 7"></polyline>
+                            </svg>
                         </button>
                     </div>
 
                     <!-- Game Navigation -->
                     <div class="flex items-center justify-center gap-2">
                         <button id="btnPrevGame"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
                             title="Previous Game">
-                            ⏪ Prev Game
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                <line x1="5" y1="19" x2="5" y2="5"></line>
+                            </svg>
+                            <span>Prev Game</span>
                         </button>
                         <span id="gameCounter"
                             class="px-4 py-2 bg-slate-800 rounded-lg text-slate-400 text-sm min-w-28 text-center">
                             Game 0 / 0
                         </span>
                         <button id="btnNextGame"
-                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm"
+                            class="nav-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
                             title="Next Game">
-                            Next Game ⏩
+                            <span>Next Game</span>
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                <line x1="19" y1="5" x2="19" y2="19"></line>
+                            </svg>
                         </button>
                     </div>
 
                     <!-- Reset Analysis Button -->
                     <div id="analysisControls" class="flex justify-center hidden">
                         <button id="btnResetPosition"
-                            class="nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-6 py-2 rounded-lg font-medium">
-                            ↩️ Reset to Game Position
+                            class="flex items-center gap-2 nav-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-6 py-2 rounded-lg font-medium">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                            <span>Reset to Game Position</span>
                         </button>
                     </div>
                 </div>
@@ -2285,7 +2331,8 @@
                     resetToGamePosition();
                 }
                 const speed = parseInt(document.getElementById('playSpeed').value);
-                btn.innerHTML = '⏸ Pause';
+                document.getElementById('btnAutoPlayIcon').innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+                btn.querySelector('span:last-child').textContent = 'Pause';
                 btn.classList.remove('from-green-500', 'to-emerald-500', 'hover:from-green-600', 'hover:to-emerald-600');
                 btn.classList.add('from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
                 autoPlayInterval = setInterval(() => {
@@ -2304,7 +2351,8 @@
             if (autoPlayInterval) {
                 clearInterval(autoPlayInterval);
                 autoPlayInterval = null;
-                btn.innerHTML = '▶ Auto Play';
+                document.getElementById('btnAutoPlayIcon').innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+                btn.querySelector('span:last-child').textContent = 'Auto';
                 btn.classList.add('from-green-500', 'to-emerald-500', 'hover:from-green-600', 'hover:to-emerald-600');
                 btn.classList.remove('from-orange-500', 'to-red-500', 'hover:from-orange-600', 'hover:to-red-600');
             }
