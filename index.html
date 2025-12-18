@@ -898,6 +898,16 @@
                             </svg>
                             <span>Undo</span>
                         </button>
+                        <button id="redoEditBtn" onclick="redoLastMove()"
+                            class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300 transition-colors opacity-50"
+                            disabled title="Redo move">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            <span>Redo</span>
+                        </button>
                         <div class="flex items-center gap-2 border-l border-slate-700 pl-2">
                             <span class="text-slate-400 text-xs">Theme:</span>
                             <select id="boardThemeSelect"
@@ -1579,6 +1589,7 @@
 
         // Undo history for board editing
         let undoHistory = [];
+        let redoHistory = [];
         const MAX_UNDO_HISTORY = 200;
 
         function saveUndoState() {
@@ -1587,15 +1598,32 @@
                 if (undoHistory.length > MAX_UNDO_HISTORY) {
                     undoHistory.shift();
                 }
+                redoHistory = []; // New move clears redo history
                 updateUndoButton();
+                updateRedoButton();
             }
         }
 
         function undoLastMove() {
             if (undoHistory.length > 0) {
+                redoHistory.push(copyBoard(analysisBoard));
                 analysisBoard = undoHistory.pop();
                 renderBoard(analysisBoard);
                 updateUndoButton();
+                updateRedoButton();
+                if (engineEnabled) {
+                    analyzeCurrentPosition();
+                }
+            }
+        }
+
+        function redoLastMove() {
+            if (redoHistory.length > 0) {
+                undoHistory.push(copyBoard(analysisBoard));
+                analysisBoard = redoHistory.pop();
+                renderBoard(analysisBoard);
+                updateUndoButton();
+                updateRedoButton();
                 if (engineEnabled) {
                     analyzeCurrentPosition();
                 }
@@ -1607,6 +1635,14 @@
             if (undoBtn) {
                 undoBtn.disabled = undoHistory.length === 0;
                 undoBtn.classList.toggle('opacity-50', undoHistory.length === 0);
+            }
+        }
+
+        function updateRedoButton() {
+            const redoBtn = document.getElementById('redoEditBtn');
+            if (redoBtn) {
+                redoBtn.disabled = redoHistory.length === 0;
+                redoBtn.classList.toggle('opacity-50', redoHistory.length === 0);
             }
         }
 
@@ -1720,6 +1756,7 @@
             promotionPieces.querySelectorAll('.promotion-piece').forEach(el => {
                 el.addEventListener('click', () => {
                     const promotedPiece = el.dataset.piece;
+                    saveUndoState();
                     analysisBoard[toRow][toCol] = promotedPiece;
                     analysisBoard[fromRow][fromCol] = null;
                     analysisWhiteToMove = !analysisWhiteToMove;
@@ -1757,6 +1794,10 @@
             validMoves = [];
             analysisControls.classList.add('hidden');
             analysisBadge.classList.add('hidden');
+            undoHistory = [];
+            redoHistory = [];
+            updateUndoButton();
+            updateRedoButton();
 
             // Only render board from history if a game is loaded
             if (boardHistory && boardHistory[currentMoveIndex + 1]) {
@@ -2426,7 +2467,9 @@
                 analysisMode = false;
                 analysisBoard = null;
                 undoHistory = [];
+                redoHistory = [];
                 if (typeof updateUndoButton === 'function') updateUndoButton();
+                if (typeof updateRedoButton === 'function') updateRedoButton();
 
                 // Reset selection
                 selectedSquare = null;
