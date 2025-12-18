@@ -2610,6 +2610,7 @@
         let analysisBySide = { white: {}, black: {} };
         let lastAnalyzedFen = '';
         let currentAnalysisId = 0; // Track analysis requests to cancel outdated ones
+        let activeAnalysisId = 0; // Track the currently executing analysis ID
         let analysisTimeout = null; // For debouncing rapid position changes
 
         // DOM elements for engine
@@ -2821,6 +2822,9 @@
             }
 
             if (message.startsWith('bestmove')) {
+                // Only process moves for the current active analysis
+                if (activeAnalysisId !== currentAnalysisId) return;
+
                 if (currentAnalysisSide === 'white') {
                     const board = getCurrentBoard();
                     const fenBlack = boardToFEN(board, false);
@@ -3125,6 +3129,7 @@
             stockfish.postMessage('stop');
             analysisTimeout = setTimeout(() => {
                 if (thisAnalysisId !== currentAnalysisId) return;
+                activeAnalysisId = thisAnalysisId; // Mark this ID as active
                 isAnalyzing = true;
                 currentAnalysisSide = 'white';
                 stockfish.postMessage('position fen ' + fenWhite);
